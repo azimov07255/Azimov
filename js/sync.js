@@ -256,6 +256,9 @@ export function mergeStates(local, remote) {
   out.businesses = [...biz.values()];
   out.budgets = { ...(remote.budgets || {}), ...(local.budgets || {}) };
   out.settings = { ...(remote.settings || {}), ...(local.settings || {}) };
+  out.streams = union(remote.streams, local.streams);
+  out.dayLog = { ...(remote.dayLog || {}) };
+  for (const [sid, days] of Object.entries(local.dayLog || {})) out.dayLog[sid] = { ...(out.dayLog[sid] || {}), ...days };
   out.dismissed = { ...(remote.dismissed || {}), ...(local.dismissed || {}) };
   out.closings = { ...(remote.closings || {}), ...(local.closings || {}) };
   out.seedCats = [...new Set([...(remote.seedCats || []), ...(local.seedCats || [])])];

@@ -20,6 +20,8 @@ function fresh() {
     subs: [],
     businesses: [],
     challenge: { base: 1000, done: [] },
+    streams: [], // recurring daily income sources ("Dadam", "Akam"): {id,name,days:[1..5],mode,amount|min,max,payMode,payDay,...}
+    dayLog: {}, // streamId -> { 'YYYY-MM-DD': {s:'paid'|'earned'|'off', a, tx?, note?} }
     dismissed: {}, // reminder id -> timestamp it was dismissed
     closings: {}, // monthKey -> result of the "close month" ritual
     seedCats: DEFAULT_CATS.map((c) => c.id),

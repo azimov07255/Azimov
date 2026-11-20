@@ -51,6 +51,7 @@ export function renderReminders() {
         ${sw('subs', "Takroriy to'lovlar", 'Obuna, ijara, kredit')}
         ${sw('debts', 'Qarz muddati', "3 kun qolganda va kechikkanda")}
         ${sw('budget', 'Byudjet ogohlantirishi', "80% va 100% da")}
+        ${sw('streams', "Kunlik daromad", "Haftalik pul kuni va belgilanmagan kun")}
         ${sw('close', 'Oyni yopish', "Oy boshida")}
         ${sw('evening', "Kechki eslatma", "Bugun yozmagan bo'lsangiz")}
         <div class="grid-2" style="margin-top:12px">${hours('hour', "Kunlik eslatma vaqti")}${hours('eveningHour', 'Kechki eslatma vaqti')}</div>

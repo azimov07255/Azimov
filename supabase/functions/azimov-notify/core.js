@@ -6,12 +6,13 @@
  *   shouldDeliver(reminder, now, prefs) -> boolean   (time-of-day rules)
  * `now` = { date: 'YYYY-MM-DD', hour: 0-23 } in the USER's local time.
  */
-export const DEFAULT_NOTIFY = { subs: true, debts: true, budget: true, evening: false, close: true, hour: 9, eveningHour: 21, daysBefore: 1 };
+export const DEFAULT_NOTIFY = { subs: true, debts: true, budget: true, evening: false, close: true, streams: true, hour: 9, eveningHour: 21, daysBefore: 1 };
 export const notifyPrefs = (snap) => ({ ...DEFAULT_NOTIFY, ...(snap?.settings?.notify || {}) });
 
 const MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
 const utc = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
 const diff = (a, b) => Math.round((utc(a) - utc(b)) / 864e5);
+const dow = (s) => new Date(utc(s)).getUTCDay();
 const addDaysStr = (s, n) => new Date(utc(s) + n * 864e5).toISOString().slice(0, 10);
 const prevMonthKey = (key) => {
   let y = +key.slice(0, 4);
@@ -90,6 +91,23 @@ export function computeReminders(snap, now) {
     const had = (snap.transactions || []).some((t) => t.type !== 'transfer' && t.date.slice(0, 7) === pk);
     if (day <= 10 && had && !snap.closings?.[pk]) {
       out.push({ id: `close:${pk}`, kind: 'close', when: 'digest', level: 'info', icon: '🧾', href: '#/budgets', order: 5, title: `${MONTHS[+pk.slice(5, 7) - 1]} oyini yoping`, body: "Natijani ko'ring va tejagan pulingizni maqsadlarga taqsimlang" });
+    }
+  }
+
+  if (P.streams) {
+    for (const st of snap.streams || []) {
+      if (st.active === false) continue;
+      const log = snap.dayLog?.[st.id] || {};
+      // weekly pay-out day: remind about everything worked but not yet received
+      if (st.payMode === 'weekly' && dow(today) === (st.payDay ?? 6)) {
+        const owed = Object.values(log).filter((e) => e.s === 'earned');
+        const total = owed.reduce((a, e) => a + e.a, 0);
+        if (total > 0) out.push({ id: `spay:${st.id}:${today}`, kind: 'stream', when: 'digest', level: 'warn', icon: '💰', href: '#/daily', order: -3, title: `${st.name}: haftalik pul olinadigan kun`, body: `${owed.length} kunlik ish haqi: ${M(total)} — oldingizmi?` });
+      }
+      // evening nudge when today (a working day) was never marked
+      if (now.hour >= P.eveningHour && !log[today] && today >= st.start && (st.days || []).includes(dow(today))) {
+        out.push({ id: `sday:${st.id}:${today}`, kind: 'stream', when: 'evening', level: 'info', icon: st.icon || '💵', href: '#/daily', order: 8, title: `${st.name}: bugun belgilanmadi`, body: 'Oldingizmi, ishladingizmi yoki dam oldingizmi?' });
+      }
     }
   }
 

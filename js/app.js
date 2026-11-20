@@ -15,6 +15,7 @@ import { renderSettings, afterSettings } from './views/settings.js';
 import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
 import { renderImport, afterImport, setImportText } from './views/import.js';
+import { renderDaily } from './views/daily.js';
 import { renderReminders, afterReminders } from './views/reminders.js';
 import { initNotify, activeReminders } from './notify.js';
 import { renderScan, afterScan } from './views/scan.js';
@@ -25,6 +26,7 @@ import { openAuthSheet } from './views/settings.js';
 const NAV = [
   ['dashboard', 'Bosh sahifa', 'home'],
   ['transactions', 'Tranzaksiyalar', 'list'],
+  ['daily', 'Kunlik daromad', 'calendar'],
   ['budgets', 'Byudjet', 'pie'],
   ['goals', 'Maqsadlar', 'target'],
   ['debts', 'Qarzlar', 'users'],
@@ -37,11 +39,12 @@ const NAV = [
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
   transactions: { render: renderTransactions, after: (r) => afterTransactions(r) },
+  daily: { render: renderDaily },
   budgets: { render: renderBudgets },
   goals: { render: renderGoals },
   debts: { render: renderDebts },

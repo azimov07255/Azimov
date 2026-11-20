@@ -1,6 +1,7 @@
 import { replaceState, state } from '../store.js';
 import { DEFAULT_CATS } from '../data.js';
 import { ymd, addDays, today, rng, parseYmd, uid } from '../utils.js';
+import { weekStart } from '../streams.js';
 
 // Deterministic demo dataset covering ~4 months so every screen looks alive.
 export function loadDemo() {
@@ -52,6 +53,41 @@ export function loadDemo() {
     if (i % 7 === 0) biz.entries.push({ id: uid(), ts: parseYmd(date).getTime() + 1, type: 'expense', amount: round(between(900000, 1300000) * trend, 10000), date, note: 'Xom ashyo (kofe, sut, stakan)' });
   }
 
+  // daily income sources: Dad (70k Mon-Fri, daily) and Brother (75-80k Mon-Sat, collected weekly on Saturday)
+  const streams = [
+    { id: 'st1', name: 'Dadam', icon: '👨', color: '#7c5cff', days: [1, 2, 3, 4, 5], mode: 'fixed', amount: 70000, min: 0, max: 0, payMode: 'daily', payDay: 6, accountId: 'a_cash', categoryId: 'i_gift', start: addDays(T, -35), active: true },
+    { id: 'st2', name: 'Akam (ish haqi)', icon: '🧔', color: '#22d3ee', days: [1, 2, 3, 4, 5, 6], mode: 'range', amount: 0, min: 75000, max: 80000, payMode: 'weekly', payDay: 6, accountId: 'a_cash', categoryId: 'i_salary', start: addDays(T, -35), active: true },
+  ];
+  const dayLog = { st1: {}, st2: {} };
+  const thisWeek = weekStart(T);
+  const lumps = {};
+  for (let i = 35; i >= 0; i--) {
+    const date = addDays(T, -i);
+    if (date > T) continue;
+    const dw = parseYmd(date).getDay();
+    if (streams[0].days.includes(dw)) {
+      if (r() < 0.08) dayLog.st1[date] = { s: 'off', a: 0, note: 'Dam oldi' };
+      else {
+        const id = uid();
+        tx.push({ id, ts: parseYmd(date).getTime() + 7, type: 'income', amount: 70000, date, note: 'Dadam', accountId: 'a_cash', categoryId: 'i_gift', streamId: 'st1', day: date });
+        dayLog.st1[date] = { s: 'paid', a: 70000, tx: id };
+      }
+    }
+    if (streams[1].days.includes(dw)) {
+      if (r() < 0.1) { dayLog.st2[date] = { s: 'off', a: 0, note: 'Bormadim' }; continue; }
+      const a = round(between(75000, 80000), 1000);
+      const ws = weekStart(date);
+      if (ws < thisWeek) {
+        // past weeks were paid out in one go on the Saturday of that week
+        const pay = addDays(ws, 5);
+        const l = (lumps[ws] ||= { id: uid(), amount: 0, date: pay });
+        l.amount += a;
+        dayLog.st2[date] = { s: 'paid', a, tx: l.id };
+      } else dayLog.st2[date] = { s: 'earned', a };
+    }
+  }
+  Object.values(lumps).forEach((l) => tx.push({ id: l.id, ts: parseYmd(l.date).getTime() + 9, type: 'income', amount: l.amount, date: l.date, note: 'Akam (ish haqi): haftalik ish haqi', accountId: 'a_cash', categoryId: 'i_salary', streamId: 'st2' }));
+
   replaceState({
     settings: { name: 'Azimov', currency: 'UZS', usdRate: 12700, theme: state.settings.theme || 'dark', hide: false, onboarded: true, demo: true },
     accounts: [
@@ -78,6 +114,8 @@ export function loadDemo() {
       { id: 's4', name: 'iCloud 200GB', amount: 15000, cycle: 'monthly', nextDate: addDays(T, 14), categoryId: 'c_subs', accountId: 'a_card', icon: '☁️', active: true },
     ],
     businesses: [biz],
+    streams,
+    dayLog,
     challenge: { base: 1000, done: [1, 2, 3, 4, 5, 6, 7, 8] },
   });
 }

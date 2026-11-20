@@ -8,6 +8,7 @@ import { actions, progress, card, empty } from '../ui.js';
 import { txRow, quickAdd } from './tx.js';
 import { overdueSubs } from './subs.js';
 import { unclosedMonth } from './budgets.js';
+import { dailyWidget } from './daily.js';
 
 const EXAMPLES = ['taksi 25 ming', 'kafe 80k', 'bozor 150 000', '+maosh 5 mln'];
 
@@ -167,6 +168,7 @@ export function renderDashboard() {
   <div class="grid">
     <div class="c8">${hero}${accs}</div>
     <div class="c4">${quick}${state.goals.length ? `<div class="alloc card"><span>Erkin mablag'</span><b>${money(totalBalance() - goalsAllocated())}</b><small class="muted">Maqsadlarga ajratilgan: ${money(goalsAllocated())}</small></div>` : ''}</div>
+    <div class="c12">${dailyWidget()}</div>
     ${safe}${health}${spend}
     ${trend}${insCard}
     ${up}${goals}${rec}
