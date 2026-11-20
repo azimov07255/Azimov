@@ -33,7 +33,10 @@ export function closeSheet() {
   current = null;
   el.classList.remove('open');
   document.body.classList.remove('lock');
-  setTimeout(() => el.remove(), 260);
+  setTimeout(() => {
+    el.remove();
+    document.dispatchEvent(new Event('sheetclosed'));
+  }, 260);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { state, catOf, balanceOf, netWorth, totalBalance, sortedTx, subsMonthly, goalsAllocated, monthlyEq, debtLeft } from '../store.js';
-import { esc, today, diffDays, fmtDate, greeting, MONTHS_GEN, parseYmd, monthShort, sum } from '../utils.js';
+import { addMonths, monthLabel, esc, today, diffDays, fmtDate, greeting, MONTHS_GEN, parseYmd, monthShort, sum } from '../utils.js';
 import { money, short, pct } from '../fmt.js';
 import { icon } from '../icons.js';
 import { stats, curKey, monthsBack, healthScore, forecast, insights, balanceSeries } from '../insights.js';
@@ -52,12 +52,16 @@ export function renderDashboard() {
     <form data-quick autocomplete="off">
       <div class="quick-in">${icon('zap', 18)}<input name="q" class="input" placeholder="Tez qo'shish: taksi 25 ming" enterkeyhint="send"><button class="btn primary sm" type="submit">${icon('send', 16)}</button></div>
     </form>
-    <div class="quick-hints">${EXAMPLES.map((e) => `<button type="button" class="hint" data-act="quick:fill" data-v="${esc(e)}">${esc(e)}</button>`).join('')}</div>
+    <div class="quick-hints">${EXAMPLES.map((e) => `<button type="button" class="hint" data-act="quick:fill" data-v="${esc(e)}">${esc(e)}</button>`).join('')}<a class="hint bank" href="#/import">🏦 Bank xabari</a></div>
   </section>`;
 
   /* ---- overdue subs ---- */
   const od = overdueSubs();
   const odBanner = od.length ? `<a class="banner warn" href="#/subs">${icon('bell', 18)}<span><b>${od.length} ta takroriy to'lov</b> muddati keldi — ${money(sum(od, (s) => s.amount))}</span>${icon('chevR', 18)}</a>` : '';
+
+  /* ---- monthly report ready ---- */
+  const pk = addMonths(key, -1);
+  const repBanner = d.getDate() <= 10 && S.reportSeen !== pk && stats(pk).count > 0 ? `<a class="banner info" href="#/reports/${pk}">${icon('sparkles', 18)}<span><b>${monthLabel(pk)} hisoboti tayyor</b> — oylik tahlil va PDF</span>${icon('chevR', 18)}</a>` : '';
 
   /* ---- safe to spend ---- */
   const spent = f.limit > 0 ? Math.min(1, f.spent / f.limit) : 0;
@@ -152,7 +156,7 @@ export function renderDashboard() {
 
   return `
   <div class="page-head greet"><div><h1>${greeting()}${S.name ? ', ' + esc(S.name) : ''} 👋</h1><p class="sub">${d.getDate()}-${MONTHS_GEN[d.getMonth()]}, ${d.getFullYear()}</p></div></div>
-  ${odBanner}
+  ${odBanner}${repBanner}
   <div class="grid">
     <div class="c8">${hero}${accs}</div>
     <div class="c4">${quick}${state.goals.length ? `<div class="alloc card"><span>Erkin mablag'</span><b>${money(totalBalance() - goalsAllocated())}</b><small class="muted">Maqsadlarga ajratilgan: ${money(goalsAllocated())}</small></div>` : ''}</div>

@@ -14,6 +14,10 @@ import { renderTools } from './views/tools.js';
 import { renderSettings, afterSettings } from './views/settings.js';
 import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
+import { renderImport, afterImport, setImportText } from './views/import.js';
+import { renderReports, afterReports } from './views/reports.js';
+import { initSync, onSyncChange, sync } from './sync.js';
+import { openAuthSheet } from './views/settings.js';
 
 const NAV = [
   ['dashboard', 'Bosh sahifa', 'home'],
@@ -23,10 +27,12 @@ const NAV = [
   ['debts', 'Qarzlar', 'users'],
   ['subs', "Takroriy to'lovlar", 'repeat'],
   ['business', 'Biznes', 'briefcase'],
+  ['import', 'Bank xabarlari', 'msg'],
+  ['reports', 'Hisobotlar', 'file'],
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'import', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -36,6 +42,8 @@ const ROUTES = {
   debts: { render: renderDebts },
   subs: { render: renderSubs },
   business: { render: (id) => (id ? renderBusinessDetail(id) : renderBusiness()) },
+  import: { render: renderImport, after: (r) => afterImport(r) },
+  reports: { render: (p) => renderReports(p), after: (r) => afterReports(r) },
   tools: { render: renderTools },
   settings: { render: renderSettings, after: (r) => afterSettings(r) },
   more: { render: renderMore },
@@ -62,12 +70,12 @@ function buildShell() {
     <aside class="side">
       <a class="brand" href="#/dashboard"><span class="logo"></span><b>Azimov</b></a>
       <nav class="side-nav">${NAV.map(([id, label, ic]) => `<a href="#/${id}" data-nav="${id}">${icon(ic, 20)}<span>${label}</span></a>`).join('')}</nav>
-      <div class="side-foot"><button class="btn primary block" data-act="tx:new">${icon('plus', 18)} Tranzaksiya</button><button class="btn ghost block" data-act="hide:toggle"><span id="hideLbl"></span></button></div>
+      <div class="side-foot"><a class="sync-chip" href="#/settings" id="syncChip" hidden></a><button class="btn primary block" data-act="tx:new">${icon('plus', 18)} Tranzaksiya</button><button class="btn ghost block" data-act="hide:toggle"><span id="hideLbl"></span></button></div>
     </aside>
     <div class="content">
       <header class="topbar">
         <a class="brand sm" href="#/dashboard"><span class="logo"></span><b>Azimov</b></a>
-        <div class="topbar-r"><button class="icon-btn" data-act="hide:toggle" id="hideBtn" aria-label="Summalarni yashirish"></button><a class="icon-btn" href="#/settings" aria-label="Sozlamalar">${icon('gear', 20)}</a></div>
+        <div class="topbar-r"><a class="icon-btn sync-dot" href="#/settings" id="syncDotM" hidden aria-label="Bulut holati"></a><button class="icon-btn" data-act="hide:toggle" id="hideBtn" aria-label="Summalarni yashirish"></button><a class="icon-btn" href="#/settings" aria-label="Sozlamalar">${icon('gear', 20)}</a></div>
       </header>
       <main id="view" class="page" tabindex="-1"></main>
     </div>
@@ -82,8 +90,19 @@ function buildShell() {
   shellBuilt = true;
 }
 
+// Bank message arriving from Android "share" (?text=) or an iOS Shortcut / automation (#/import?text=)
+function consumeIncoming() {
+  const sp = new URLSearchParams(location.search);
+  let t = sp.get('text') || sp.get('title') || '';
+  const q = location.hash.split('?')[1];
+  if (q) t = new URLSearchParams(q).get('text') || t;
+  if (!t.trim()) return;
+  setImportText(t);
+  history.replaceState(null, '', location.pathname + '#/import');
+}
+
 function parseHash() {
-  const h = location.hash.replace(/^#\/?/, '');
+  const h = location.hash.replace(/^#\/?/, '').split('?')[0];
   const [name = 'dashboard', param] = h.split('/');
   return [ROUTES[name] ? name : 'dashboard', param];
 }
@@ -123,6 +142,7 @@ export function render() {
     view.innerHTML = `<div class="card"><h3>Xatolik</h3><p class="muted">${esc(e.message)}</p></div>`;
   }
   updateNav(name);
+  updateSyncUI();
   if (lastRoute !== key) {
     animateCounters(view, (v) => money(v));
     window.scrollTo(0, 0);
@@ -148,6 +168,7 @@ function renderOnboarding() {
         <label class="field"><span>Hozir qo'lingizdagi pul (ixtiyoriy)</span><div class="amt-wrap"><input class="input amt" inputmode="numeric" name="cash" placeholder="0"><i>so'm</i></div></label>
         <button class="btn primary block lg" type="submit">Boshlash</button>
       </form>
+      <button class="btn ghost block" id="onbLogin">${icon('cloud', 16)} Akkauntim bor — kirish</button>
       <button class="btn ghost block" id="onbDemo">${icon('sparkles', 16)} Demo ma'lumot bilan ko'rish</button>
     </div>
   </div>`;
@@ -162,6 +183,7 @@ function renderOnboarding() {
     location.hash = '#/dashboard';
     commit();
   });
+  document.getElementById('onbLogin').addEventListener('click', () => openAuthSheet());
   document.getElementById('onbDemo').addEventListener('click', () => {
     loadDemo();
     location.hash = '#/dashboard';
@@ -185,12 +207,37 @@ actions['hide:toggle'] = () => {
 actions._render = render;
 bindFormEnhancements(document);
 window.addEventListener('hashchange', () => {
+  consumeIncoming();
   closeSheet();
   render();
 });
 onChange(render);
 
+const SYNC_LABEL = { idle: 'Sinxronlangan', syncing: 'Sinxronlanmoqda…', offline: 'Oflayn', error: 'Sinxron xatosi', conflict: 'Farq bor' };
+function updateSyncUI() {
+  const on = !!sync.user;
+  const label = SYNC_LABEL[sync.status] || '';
+  for (const id of ['syncDotM', 'syncChip']) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.hidden = !on;
+    el.className = (id === 'syncChip' ? 'sync-chip' : 'icon-btn sync-dot') + ' s-' + sync.status;
+    el.title = label;
+    el.innerHTML = icon('cloud', id === 'syncChip' ? 16 : 20) + (id === 'syncChip' ? `<span>${label}</span>` : '<i></i>');
+  }
+}
+// a sheet that was open while sync state changed may have skipped a refresh: redo it once it is gone
+document.addEventListener('sheetclosed', () => shellBuilt && parseHash()[0] === 'settings' && render());
+onSyncChange(() => {
+  updateSyncUI();
+  // settings shows live status; the rest of the app re-renders through store changes
+  if (shellBuilt && parseHash()[0] === 'settings' && !document.querySelector('.sheet-root.open')) render();
+  if (!state.settings.onboarded && sync.user && sync.status === 'idle') render();
+});
+
+consumeIncoming();
 render();
+initSync();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname !== 'localhost-nosw') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

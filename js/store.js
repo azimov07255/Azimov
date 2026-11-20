@@ -20,6 +20,8 @@ function fresh() {
     subs: [],
     businesses: [],
     challenge: { base: 1000, done: [] },
+    rules: {}, // merchant -> categoryId, learned from bank-message imports
+    imported: [], // hashes of already imported bank messages
   };
 }
 
