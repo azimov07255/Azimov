@@ -64,6 +64,8 @@ async function client() {
   return sb;
 }
 
+export const getClient = client;
+
 export function deviceName() {
   const ua = navigator.userAgent;
   const os = /iPhone|iPad/.test(ua) ? 'iPhone/iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Qurilma';
@@ -254,6 +256,7 @@ export function mergeStates(local, remote) {
   out.businesses = [...biz.values()];
   out.budgets = { ...(remote.budgets || {}), ...(local.budgets || {}) };
   out.settings = { ...(remote.settings || {}), ...(local.settings || {}) };
+  out.dismissed = { ...(remote.dismissed || {}), ...(local.dismissed || {}) };
   out.closings = { ...(remote.closings || {}), ...(local.closings || {}) };
   out.seedCats = [...new Set([...(remote.seedCats || []), ...(local.seedCats || [])])];
   out.rules = { ...(remote.rules || {}), ...(local.rules || {}) };

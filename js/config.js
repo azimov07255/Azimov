@@ -9,3 +9,6 @@ export const AUTH_STORAGE_KEY = 'azimov.sb.auth';
 // On-device OCR for receipts (Tesseract.js). Worker, WASM core and language data are fetched from the same CDN on first use.
 export const TESS_LIB = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.esm.min.js';
 export const TESS_LANGS = ['eng', 'rus'];
+
+// Web Push (reminders while the app is closed). The PUBLIC key is safe to ship; the private key lives only in Supabase secrets.
+export const VAPID_PUBLIC = 'BK961RKS7YSXZQolpzBE62hr34h1XSC3bdebaQayvSfy6yOa9mT6RxIpvuBYpODUv9chVCth2C7Cun-iV54l1eg';

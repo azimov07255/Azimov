@@ -15,6 +15,8 @@ import { renderSettings, afterSettings } from './views/settings.js';
 import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
 import { renderImport, afterImport, setImportText } from './views/import.js';
+import { renderReminders, afterReminders } from './views/reminders.js';
+import { initNotify, activeReminders } from './notify.js';
 import { renderScan, afterScan } from './views/scan.js';
 import { renderReports, afterReports } from './views/reports.js';
 import { initSync, onSyncChange, sync } from './sync.js';
@@ -28,13 +30,14 @@ const NAV = [
   ['debts', 'Qarzlar', 'users'],
   ['subs', "Takroriy to'lovlar", 'repeat'],
   ['business', 'Biznes', 'briefcase'],
+  ['reminders', 'Eslatmalar', 'bell'],
   ['import', 'Bank xabarlari', 'msg'],
   ['scan', 'Chek skanerlash', 'camera'],
   ['reports', 'Hisobotlar', 'file'],
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -45,6 +48,7 @@ const ROUTES = {
   subs: { render: renderSubs },
   business: { render: (id) => (id ? renderBusinessDetail(id) : renderBusiness()) },
   import: { render: renderImport, after: (r) => afterImport(r) },
+  reminders: { render: renderReminders, after: (r) => afterReminders(r) },
   scan: { render: renderScan, after: (r) => afterScan(r) },
   reports: { render: (p) => renderReports(p), after: (r) => afterReports(r) },
   tools: { render: renderTools },
@@ -78,7 +82,7 @@ function buildShell() {
     <div class="content">
       <header class="topbar">
         <a class="brand sm" href="#/dashboard"><span class="logo"></span><b>Azimov</b></a>
-        <div class="topbar-r"><a class="icon-btn sync-dot" href="#/settings" id="syncDotM" hidden aria-label="Bulut holati"></a><button class="icon-btn" data-act="hide:toggle" id="hideBtn" aria-label="Summalarni yashirish"></button><a class="icon-btn" href="#/settings" aria-label="Sozlamalar">${icon('gear', 20)}</a></div>
+        <div class="topbar-r"><a class="icon-btn bell" href="#/reminders" id="bellBtn" aria-label="Eslatmalar">${icon('bell', 20)}<em id="bellN" hidden></em></a><a class="icon-btn sync-dot" href="#/settings" id="syncDotM" hidden aria-label="Bulut holati"></a><button class="icon-btn" data-act="hide:toggle" id="hideBtn" aria-label="Summalarni yashirish"></button><a class="icon-btn" href="#/settings" aria-label="Sozlamalar">${icon('gear', 20)}</a></div>
       </header>
       <main id="view" class="page" tabindex="-1"></main>
     </div>
@@ -146,6 +150,7 @@ export function render() {
   }
   updateNav(name);
   updateSyncUI();
+  updateBell();
   if (lastRoute !== key) {
     animateCounters(view, (v) => money(v));
     window.scrollTo(0, 0);
@@ -217,6 +222,16 @@ window.addEventListener('hashchange', () => {
 onChange(render);
 
 const SYNC_LABEL = { idle: 'Sinxronlangan', syncing: 'Sinxronlanmoqda…', offline: 'Oflayn', error: 'Sinxron xatosi', conflict: 'Farq bor' };
+function updateBell() {
+  const n = state.settings.onboarded ? activeReminders().length : 0;
+  const b = document.getElementById('bellN');
+  if (b) {
+    b.hidden = !n;
+    b.textContent = n > 9 ? '9+' : n;
+  }
+  document.querySelectorAll('[data-nav="reminders"]').forEach((a) => a.setAttribute('data-badge', n || ''));
+}
+
 function updateSyncUI() {
   const on = !!sync.user;
   const label = SYNC_LABEL[sync.status] || '';
@@ -241,6 +256,7 @@ onSyncChange(() => {
 consumeIncoming();
 render();
 initSync();
+initNotify();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname !== 'localhost-nosw') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

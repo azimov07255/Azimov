@@ -1,0 +1,33 @@
+-- Azimov push reminders: device subscriptions + a dedupe log used by the azimov-notify edge function.
+create table if not exists public.azimov_push_subs (
+  endpoint   text primary key,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  p256dh     text not null,
+  auth       text not null,
+  tz         text not null default 'UTC',
+  ua         text,
+  created_at timestamptz not null default now()
+);
+create index if not exists azimov_push_subs_user_idx on public.azimov_push_subs (user_id);
+
+alter table public.azimov_push_subs enable row level security;
+create policy "azimov subs select own" on public.azimov_push_subs
+  for select to authenticated using ((select auth.uid()) = user_id);
+create policy "azimov subs insert own" on public.azimov_push_subs
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "azimov subs update own" on public.azimov_push_subs
+  for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy "azimov subs delete own" on public.azimov_push_subs
+  for delete to authenticated using ((select auth.uid()) = user_id);
+revoke all on public.azimov_push_subs from anon;
+grant select, insert, update, delete on public.azimov_push_subs to authenticated;
+
+-- which reminder ids were already pushed to which user (written only by the edge function / service role)
+create table if not exists public.azimov_push_log (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  rid     text not null,
+  sent_at timestamptz not null default now(),
+  primary key (user_id, rid)
+);
+alter table public.azimov_push_log enable row level security; -- no policies: clients cannot read or write it
+revoke all on public.azimov_push_log from anon, authenticated;

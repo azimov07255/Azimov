@@ -5,6 +5,7 @@ import { icon } from '../icons.js';
 import { ACCOUNT_TYPES, COLORS, EMOJI } from '../data.js';
 import { actions, sheet, fText, fAmount, fSelect, fEmoji, fColor, fSeg, toast, confirmBox, amt, card } from '../ui.js';
 import { loadDemo } from './demo.js';
+import { disablePush } from '../push.js';
 import { sync, signIn, signUp, signOut, resetPassword, syncNow } from '../sync.js';
 
 const STATUS = {
@@ -266,6 +267,7 @@ actions['cloud:sync'] = async () => {
 };
 actions['cloud:logout'] = async () => {
   if (await confirmBox("Chiqsangiz, shu qurilmadagi ma'lumotlar saqlanib qoladi, lekin bulut bilan sinxronlanmaydi.", { ok: 'Chiqish' })) {
+    await disablePush().catch(() => {});
     await signOut();
     toast('Chiqdingiz', { type: 'ok' });
   }

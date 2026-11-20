@@ -1,0 +1,12 @@
+-- Schedule the reminder job every 10 minutes (needs the pg_cron and pg_net extensions).
+-- Replace <PROJECT_REF> and <CRON_SECRET> (the same value as the CRON_SECRET edge-function secret). Do NOT commit the real secret.
+select cron.schedule(
+  'azimov-notify',
+  '*/10 * * * *',
+  $$ select net.http_post(
+       url     := 'https://<PROJECT_REF>.supabase.co/functions/v1/azimov-notify',
+       headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', '<CRON_SECRET>'),
+       body    := '{}'::jsonb,
+       timeout_milliseconds := 20000
+     ) $$
+);

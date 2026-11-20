@@ -6,6 +6,7 @@ const ITEMS = [
   ['goals', 'Maqsadlar', 'target', "Orzularni raqamga aylantiring", '#34d399'],
   ['debts', 'Qarzlar', 'users', "Kim kimga qarzdor", '#fb7185'],
   ['subs', "Takroriy to'lovlar", 'repeat', "Obuna va majburiy to'lovlar", '#818cf8'],
+  ['reminders', 'Eslatmalar', 'bell', "To'lov, qarz va byudjet eslatmalari", '#fbbf24'],
   ['import', 'Bank xabarlari', 'msg', "SMS / Payme / Click xabarini import qilish", '#f472b6'],
   ['scan', 'Chek skanerlash', 'camera', "Chek rasmini olsangiz — o'zi yoziladi", '#fbbf24'],
   ['reports', 'Hisobotlar', 'file', "Oylik tahlil va PDF", '#60a5fa'],
