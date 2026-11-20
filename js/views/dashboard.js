@@ -59,6 +59,9 @@ export function renderDashboard() {
   const od = overdueSubs();
   const odBanner = od.length ? `<a class="banner warn" href="#/subs">${icon('bell', 18)}<span><b>${od.length} ta takroriy to'lov</b> muddati keldi — ${money(sum(od, (s) => s.amount))}</span>${icon('chevR', 18)}</a>` : '';
 
+  /* ---- demo data notice ---- */
+  const demoBanner = S.demo ? `<div class="banner demo">${icon('sparkles', 18)}<span><b>Demo ma'lumot</b> ko'rsatilmoqda — bular haqiqiy pulingiz emas.</span><button class="btn primary sm" data-act="demo:clear">0 dan boshlash</button></div>` : '';
+
   /* ---- monthly report ready ---- */
   const pk = addMonths(key, -1);
   const repBanner = d.getDate() <= 10 && S.reportSeen !== pk && stats(pk).count > 0 ? `<a class="banner info" href="#/reports/${pk}">${icon('sparkles', 18)}<span><b>${monthLabel(pk)} hisoboti tayyor</b> — oylik tahlil va PDF</span>${icon('chevR', 18)}</a>` : '';
@@ -156,7 +159,7 @@ export function renderDashboard() {
 
   return `
   <div class="page-head greet"><div><h1>${greeting()}${S.name ? ', ' + esc(S.name) : ''} 👋</h1><p class="sub">${d.getDate()}-${MONTHS_GEN[d.getMonth()]}, ${d.getFullYear()}</p></div></div>
-  ${odBanner}${repBanner}
+  ${demoBanner}${odBanner}${repBanner}
   <div class="grid">
     <div class="c8">${hero}${accs}</div>
     <div class="c4">${quick}${state.goals.length ? `<div class="alloc card"><span>Erkin mablag'</span><b>${money(totalBalance() - goalsAllocated())}</b><small class="muted">Maqsadlarga ajratilgan: ${money(goalsAllocated())}</small></div>` : ''}</div>

@@ -1,5 +1,5 @@
-const CACHE = 'azimov-v1';
-const SHELL = ['./', './index.html', './css/styles.css', './manifest.webmanifest', './assets/icon.svg'];
+const CACHE = 'azimov-v2';
+const SHELL = ['./', './index.html', './css/styles.css', './manifest.webmanifest', './assets/icon.svg', './assets/logo.svg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -53,7 +53,7 @@ export function loadDemo() {
   }
 
   replaceState({
-    settings: { name: 'Azimov', currency: 'UZS', usdRate: 12700, theme: state.settings.theme || 'dark', hide: false, onboarded: true },
+    settings: { name: 'Azimov', currency: 'UZS', usdRate: 12700, theme: state.settings.theme || 'dark', hide: false, onboarded: true, demo: true },
     accounts: [
       { id: 'a_cash', name: 'Naqd pul', type: 'cash', icon: '💵', color: '#34d399', initial: 600000 },
       { id: 'a_card', name: 'Humo karta', type: 'card', icon: '💳', color: '#7c5cff', initial: 2500000 },

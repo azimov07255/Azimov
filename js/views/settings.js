@@ -50,7 +50,7 @@ export function renderSettings() {
         <button class="btn ghost" data-act="data:csv">${icon('download', 16)} Tranzaksiyalar (CSV)</button>
         <label class="btn ghost file">${icon('upload', 16)} Zaxiradan tiklash<input type="file" id="importFile" accept="application/json,.json" hidden></label>
         <button class="btn ghost" data-act="data:demo">${icon('sparkles', 16)} Demo ma'lumot yuklash</button>
-        <button class="btn danger-ghost" data-act="data:reset">${icon('trash', 16)} Hammasini o'chirish</button>
+        <button class="btn danger-ghost" data-act="data:reset">${icon('trash', 16)} 0 dan boshlash (hammasini o'chirish)</button>
       </div>`, { cls: 'c6' })}
   </div>
   <p class="muted center small foot">Azimov · Pul boshqaruvi · v1.0</p>`;
@@ -94,12 +94,22 @@ actions['data:demo'] = async () => {
   toast("Demo ma'lumot yuklandi ✨", { type: 'ok' });
   location.hash = '#/dashboard';
 };
-actions['data:reset'] = async () => {
-  if (await confirmBox("BARCHA ma'lumotlar o'chadi va qaytarib bo'lmaydi. Davom etasizmi?", { ok: "Ha, o'chirish" })) {
-    resetAll();
-    location.hash = '#/dashboard';
+export async function wipeEverything() {
+  const cloud = !!sync.user;
+  const msg = cloud
+    ? "BARCHA ma'lumotlar (shu qurilmada VA bulutda) o'chadi va qaytarib bo'lmaydi. Akkauntingiz saqlanib qoladi. Davom etasizmi?"
+    : "BARCHA ma'lumotlar o'chadi va qaytarib bo'lmaydi. Davom etasizmi?";
+  if (!(await confirmBox(msg, { ok: "Ha, 0 dan boshlash" }))) return;
+  resetAll();
+  location.hash = '#/dashboard';
+  if (cloud) {
+    if (sync.status === 'conflict') sync.status = 'idle';
+    await syncNow(); // push the empty state right away so the demo data cannot come back from the cloud
   }
-};
+  toast("Hammasi 0 dan boshlandi ✨", { type: 'ok' });
+}
+actions['data:reset'] = wipeEverything;
+actions['demo:clear'] = wipeEverything;
 
 /* ---------- accounts ---------- */
 function acctSheet(a = null) {

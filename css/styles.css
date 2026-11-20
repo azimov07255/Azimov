@@ -104,15 +104,10 @@ small { font-size: 12px; }
 .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; letter-spacing: -0.02em; padding: 0 8px; }
 .brand.sm { font-size: 18px; padding: 0; }
 .logo {
-  width: 34px; height: 34px; border-radius: 11px; display: inline-block; position: relative;
-  background: var(--grad); box-shadow: 0 8px 22px -6px rgba(124, 92, 255, 0.7);
+  width: 34px; height: 34px; border-radius: 11px; display: inline-block;
+  background: url('../assets/logo.svg') center / cover no-repeat; box-shadow: 0 8px 22px -6px rgba(124, 92, 255, 0.7);
 }
-.logo::after {
-  content: ''; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px;
-  background: #fff; clip-path: polygon(50% 0, 100% 100%, 82% 100%, 70% 70%, 30% 70%, 18% 100%, 0 100%);
-}
-.logo.lg { width: 64px; height: 64px; border-radius: 20px; }
-.logo.lg::after { width: 30px; height: 30px; }
+.logo.lg { width: 72px; height: 72px; border-radius: 22px; }
 .side-nav { display: flex; flex-direction: column; gap: 4px; }
 .side-nav a {
   display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 14px;
@@ -659,3 +654,6 @@ textarea.input { resize: vertical; }
 .imp-h .input.sm { min-width: 128px; }
 .imp-amt { width: 130px; }
 .imp-bar { margin-bottom: 16px; }
+
+.banner.demo { background: color-mix(in srgb, var(--info) 14%, transparent); border-color: color-mix(in srgb, var(--info) 40%, transparent); }
+.banner.demo .btn { flex: none; }

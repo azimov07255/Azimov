@@ -67,9 +67,12 @@ export function replaceState(next) {
   Object.assign(state, normalize(next));
   commit();
 }
+// Wipes all money data but keeps the profile (name, currency, theme) so the user lands on an empty dashboard, not onboarding.
 export function resetAll() {
+  const keep = { ...state.settings };
   for (const k of Object.keys(state)) delete state[k];
   Object.assign(state, fresh());
+  Object.assign(state.settings, keep, { onboarded: true, demo: false, reportSeen: '' });
   commit();
 }
 
