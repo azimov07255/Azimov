@@ -27,7 +27,7 @@ const CUR = { UZS: ["so'm", false], USD: ['$', true], EUR: ['€', true], RUB: [
 export function money(n, cur = 'UZS') {
   const [sym, pre] = CUR[cur] || CUR.UZS;
   const dec = cur === 'UZS' || cur === 'RUB' ? 0 : 2;
-  const s = Math.abs(n).toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const s = Math.abs(n).toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
   return pre ? sym + s : `${s} ${sym}`;
 }
 const left = (d) => Math.max(0, d.amount - (d.payments || []).reduce((a, p) => a + p.amount, 0));
