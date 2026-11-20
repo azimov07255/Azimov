@@ -15,6 +15,7 @@ import { renderSettings, afterSettings } from './views/settings.js';
 import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
 import { renderImport, afterImport, setImportText } from './views/import.js';
+import { renderScan, afterScan } from './views/scan.js';
 import { renderReports, afterReports } from './views/reports.js';
 import { initSync, onSyncChange, sync } from './sync.js';
 import { openAuthSheet } from './views/settings.js';
@@ -28,11 +29,12 @@ const NAV = [
   ['subs', "Takroriy to'lovlar", 'repeat'],
   ['business', 'Biznes', 'briefcase'],
   ['import', 'Bank xabarlari', 'msg'],
+  ['scan', 'Chek skanerlash', 'camera'],
   ['reports', 'Hisobotlar', 'file'],
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'import', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -43,6 +45,7 @@ const ROUTES = {
   subs: { render: renderSubs },
   business: { render: (id) => (id ? renderBusinessDetail(id) : renderBusiness()) },
   import: { render: renderImport, after: (r) => afterImport(r) },
+  scan: { render: renderScan, after: (r) => afterScan(r) },
   reports: { render: (p) => renderReports(p), after: (r) => afterReports(r) },
   tools: { render: renderTools },
   settings: { render: renderSettings, after: (r) => afterSettings(r) },

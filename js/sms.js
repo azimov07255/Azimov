@@ -60,7 +60,7 @@ export function splitMessages(text) {
   return out;
 }
 
-function findDate(t) {
+export function findDate(t) {
   const m = t.match(DATE_RE);
   if (!m) return { date: null, rest: t };
   let y, mo, d;
@@ -76,7 +76,7 @@ function findDate(t) {
   return { date: iso, rest: t.replace(m[0], ' ') };
 }
 
-function titleCase(s) {
+export function titleCase(s) {
   if (s && s === s.toUpperCase() && /[A-Z]/.test(s)) return s.toLowerCase().replace(/(^|[\s\-/.])([a-zа-я])/g, (_, a, b) => a + b.toUpperCase());
   return s;
 }
