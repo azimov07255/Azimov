@@ -10,5 +10,5 @@ export const AUTH_STORAGE_KEY = 'azimov.sb.auth';
 export const TESS_LIB = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.esm.min.js';
 export const TESS_LANGS = ['eng', 'rus'];
 
-// Web Push (reminders while the app is closed). The PUBLIC key is safe to ship; the private key lives only in Supabase secrets.
-export const VAPID_PUBLIC = 'BK961RKS7YSXZQolpzBE62hr34h1XSC3bdebaQayvSfy6yOa9mT6RxIpvuBYpODUv9chVCth2C7Cun-iV54l1eg';
+// Web Push (reminders while the app is closed): the server generates the VAPID pair; the app fetches only the PUBLIC half.
+export const PUSH_FN_URL = SUPABASE_URL + '/functions/v1/azimov-notify';

@@ -19,6 +19,9 @@ Pulni to'g'ri sarflash, tejash va kelajakdagi biznesga tayyorlanish uchun shaxsi
 | **Bank xabarlari** | SMS / Humo / Uzcard / Payme / Click xabarini joylang (yoki Android'da «Ulashish», iPhone'da Buyruqlar orqali yuboring) — summa, do'kon, karta, kategoriya va hisob avtomatik aniqlanadi; dublikatlar belgilanadi; tuzatgan kategoriyangiz keyingi safar eslab qolinadi |
 | **Hisobotlar** | Oylik va yillik tahlil: xulosa matni, tavsiyalar, kategoriyalar (o'tgan oyga nisbatan), kunlik/hafta kunlari grafigi, eng katta xarajatlar, byudjet, bizneslar. **PDF** — «PDF» tugmasi → «PDF sifatida saqlash» |
 | **Bulut va akkaunt** | Email/parol bilan kirish, qurilmalar o'rtasida avtomatik sinxronlash (Supabase), to'qnashuvda «birlashtirish / bulut / qurilma» tanlovi |
+| **Oylik reja va «Oyni yopish»** | Byudjet sahifasida «har so'mga vazifa» o'lchovi (daromad − byudjet − maqsadlarga hissa = vazifasiz qolgan pul); oy oxirida natijani ko'rib, tejalgan pulni maqsadlarga taqsimlash, ketma-ket oylar «seriyasi» |
+| **Chek skanerlash** | Chek rasmi → qurilmada OCR (Tesseract.js, lotin + kirill) → do'kon, jami summa, sana, kategoriya; tahrirlab qo'shasiz |
+| **Eslatmalar** | To'lov/qarz muddati, byudjet 80%/100%, oyni yopish, kechki eslatma; qo'ng'iroqcha belgisi; ilova ochiq paytda tizim bildirishnomasi; **ilova yopiq paytda Web Push** (akkaunt kerak) |
 | **Sozlamalar** | Hisoblar, o'z kategoriyalaringiz, valyuta (UZS/USD/EUR/RUB), qorong'i/yorug' mavzu, summalarni yashirish, JSON zaxira va tiklash, CSV eksport |
 
 ## Ishga tushirish
@@ -41,6 +44,9 @@ js/app.js             router, shell, onboarding
 js/store.js           holat + localStorage
 js/insights.js        prognoz, salomatlik balli, aqlli maslahatlar
 js/charts.js          SVG grafiklar (donut, bar, area, ring)
+js/reminders-core.js  eslatma qoidalari (toza, serverda ham ishlatiladi)
+js/notify.js, push.js  bildirishnomalar va Web Push obunasi
+js/receipt.js         chek matni parseri; views/scan.js — OCR sahifasi
 js/sync.js            Supabase auth + sinxronlash + to'qnashuvlarni hal qilish
 js/sms.js             bank xabarlari parseri (sof funksiyalar)
 supabase/migrations   bulut jadvali va RLS siyosatlari
@@ -54,6 +60,14 @@ js/views/*.js         har bir bo'lim
 3. Supabase → Authentication → URL Configuration: **Site URL** ga ilova manzilini yozing (tasdiqlash xati shu manzilga qaytaradi). Email tasdiqlash xohlamasangiz, Providers → Email → «Confirm email» ni o'chiring.
 
 Ishlash tartibi: har bir foydalanuvchining ma'lumoti bitta JSON nusxa sifatida saqlanadi; `rev` hisoblagichi (DB trigger oshiradi) orqali ikki qurilma bir vaqtda o'zgartirsa to'qnashuv aniqlanadi. Ilova internetsiz ham to'liq ishlaydi — o'zgarishlar internet qaytganda yuboriladi.
+
+## Eslatmalar (Web Push) — server qismi
+
+- `supabase/migrations/*_azimov_push.sql` — `azimov_push_subs` (qurilma obunalari, RLS), `azimov_push_log` (takror yubormaslik), `azimov_private` (faqat server o'qiydi).
+- `supabase/functions/azimov-notify` — Edge Function. VAPID kalit juftini birinchi chaqiruvda o'zi yaratadi va `azimov_private` da saqlaydi (panelda secret kiritish shart emas); ilova faqat **ochiq** kalitni `?pubkey` orqali oladi.
+- `supabase/cron.sql.example` — pg_cron har 10 daqiqada funksiyani chaqiradi. O'chirish: `select cron.unschedule('azimov-notify');`
+- `js/reminders-core.js` va `supabase/functions/azimov-notify/core.js` **bir xil fayl** bo'lishi shart (qoidalar brauzerda ham, serverda ham bir xil). O'zgartirsangiz ikkalasini yangilang.
+- iPhone: faqat bosh ekranga qo'shilgan ilovada (iOS 16.4+). Foydalanuvchi akkauntga kirib, «Eslatmalar → Bildirishnomalarni yoqish» ni bosadi.
 
 ## Bank xabarlari haqida halol eslatma
 

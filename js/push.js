@@ -1,9 +1,9 @@
-import { VAPID_PUBLIC } from './config.js';
+import { PUSH_FN_URL } from './config.js';
 import { getClient, sync } from './sync.js';
 import { supported } from './notify.js';
 
 const TABLE = 'azimov_push_subs';
-export const pushSupported = () => supported() && 'serviceWorker' in navigator && 'PushManager' in window && !!VAPID_PUBLIC;
+export const pushSupported = () => supported() && 'serviceWorker' in navigator && 'PushManager' in window;
 export const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
 export const isStandalone = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
 
@@ -12,6 +12,23 @@ const b64 = (s) => {
   const raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 };
+
+let vapidKey = null;
+async function getVapidKey() {
+  if (vapidKey) return vapidKey;
+  try {
+    vapidKey = localStorage.getItem('azimov.vapid');
+  } catch {}
+  if (!vapidKey) {
+    const r = await fetch(PUSH_FN_URL + '?pubkey');
+    if (!r.ok) throw new Error('Push serveri javob bermadi');
+    vapidKey = (await r.json()).key;
+    try {
+      localStorage.setItem('azimov.vapid', vapidKey);
+    } catch {}
+  }
+  return vapidKey;
+}
 
 export async function currentSub() {
   if (!pushSupported()) return null;
@@ -28,7 +45,7 @@ export async function enableNotifications() {
   if (!pushSupported()) return out;
   if (!sync.user) return { ...out, needLogin: true };
   const reg = await navigator.serviceWorker.ready;
-  const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(VAPID_PUBLIC) }));
+  const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(await getVapidKey()) }));
   const j = sub.toJSON();
   const c = await getClient();
   const { error } = await c.from(TABLE).upsert({

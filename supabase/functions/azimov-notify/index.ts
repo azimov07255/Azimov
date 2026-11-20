@@ -1,10 +1,10 @@
 // Azimov reminders -> Web Push, run by pg_cron every 10 minutes.
-// Secrets: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT, CRON_SECRET (+ SUPABASE_* provided by the platform).
+// No dashboard secrets needed: the cron shared secret and the VAPID key pair live in public.azimov_private
+// (service-role only). The VAPID pair is generated on first use; GET ?pubkey returns the public half to the app.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 import { computeReminders, shouldDeliver, notifyPrefs } from './core.js';
 
-const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? '';
 const MAX_INDIVIDUAL = 3;
 
 function localNow(tz: string) {
@@ -21,8 +21,33 @@ const safeTz = (tz: string) => {
   }
 };
 
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, x-cron-secret' };
+const VAPID_SUBJECT = 'mailto:noreply@example.com';
+
+async function loadPrivate(sb: any): Promise<Record<string, string>> {
+  const { data } = await sb.from('azimov_private').select('key,value');
+  return Object.fromEntries((data ?? []).map((r: any) => [r.key, r.value]));
+}
+async function loadVapid(sb: any) {
+  let p = await loadPrivate(sb);
+  if (!p.vapid) {
+    // ignoreDuplicates: if two first calls race, the first writer wins and both then read the same pair
+    await sb.from('azimov_private').upsert({ key: 'vapid', value: JSON.stringify(webpush.generateVAPIDKeys()) }, { onConflict: 'key', ignoreDuplicates: true });
+    p = await loadPrivate(sb);
+  }
+  return { vapid: JSON.parse(p.vapid), cron: p.cron_secret };
+}
+
 Deno.serve(async (req) => {
-  if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) return new Response('forbidden', { status: 403 });
+  if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
+  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
+  const { vapid, cron } = await loadVapid(sb);
+
+  // public half of the VAPID key for the app's pushManager.subscribe()
+  if (req.method === 'GET' && new URL(req.url).searchParams.has('pubkey')) {
+    return new Response(JSON.stringify({ key: vapid.publicKey }), { headers: { ...CORS, 'content-type': 'application/json', 'cache-control': 'public, max-age=3600' } });
+  }
+  if (!cron || req.headers.get('x-cron-secret') !== cron) return new Response('forbidden', { status: 403 });
   const body = await req.json().catch(() => ({}));
 
   // Test hook: compute what WOULD be sent for an inline snapshot (no database, no push).
@@ -33,8 +58,7 @@ Deno.serve(async (req) => {
     return Response.json({ now, reminders });
   }
 
-  webpush.setVapidDetails(Deno.env.get('VAPID_SUBJECT') ?? 'mailto:noreply@example.com', Deno.env.get('VAPID_PUBLIC_KEY')!, Deno.env.get('VAPID_PRIVATE_KEY')!);
-  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
+  webpush.setVapidDetails(VAPID_SUBJECT, vapid.publicKey, vapid.privateKey);
   const stats = { users: 0, sent: 0, failed: 0, removed: 0, skipped: 0 };
 
   const { data: subs, error } = await sb.from('azimov_push_subs').select('endpoint,user_id,p256dh,auth,tz');
