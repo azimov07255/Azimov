@@ -4,7 +4,8 @@ import { money, short, pct } from '../fmt.js';
 import { icon } from '../icons.js';
 import { stats, curKey, forecast, baseline, monthsBack } from '../insights.js';
 import { ring } from '../charts.js';
-import { actions, sheet, fAmount, progress, card, toast, amt, empty, fText } from '../ui.js';
+import { actions, sheet, fAmount, progress, card, toast, amt, empty, fText, confirmBox, closeSheet } from '../ui.js';
+import { openCatSheet } from './settings.js';
 import { monthLabel } from '../utils.js';
 
 export function renderBudgets() {
@@ -27,7 +28,7 @@ export function renderBudgets() {
       <div class="ov-row"><span>Sarflandi</span><b>${money(spentBudgeted)}</b></div>
       <div class="ov-row"><span>Qoldi</span><b class="${bt - spentBudgeted < 0 ? 'neg' : 'pos'}">${bt > 0 ? money(bt - spentBudgeted) : '—'}</b></div>
       <div class="ov-row"><span>Kuniga xavfsiz</span><b>${bt > 0 ? money(f.perDay) : '—'}</b></div>
-      <div class="ov-actions"><button class="btn primary sm" data-act="budget:edit">${icon('edit', 16)} Byudjetni sozlash</button><button class="btn ghost sm" data-act="budget:auto">${icon('sparkles', 16)} Avto-reja</button></div>
+      <div class="ov-actions"><button class="btn primary sm" data-act="budget:edit">${icon('edit', 16)} Byudjetni sozlash</button><button class="btn ghost sm" data-act="budget:auto">${icon('sparkles', 16)} Avto-reja</button>${bt > 0 ? `<button class="btn danger-ghost sm" data-act="budget:clear">${icon('trash', 16)} Byudjetni o'chirish</button>` : ''}<a class="btn ghost sm" href="#/settings">${icon('edit', 16)} Kategoriyalar</a></div>
     </div>
   </section>`;
 
@@ -90,11 +91,26 @@ function avgCat(id) {
 }
 
 actions['budget:edit'] = () => limitsSheet(state.budgets);
+actions['budget:clear'] = async () => {
+  if (!(await confirmBox("Barcha kategoriyalar limiti o'chadi (tranzaksiyalar saqlanadi). Davom etasizmi?", { ok: "Ha, o'chirish" }))) return;
+  state.budgets = {};
+  commit();
+  toast("Byudjet o'chirildi", { type: 'ok' });
+};
 actions['budget:cat'] = (el) => {
   const c = catOf(el.dataset.id);
+  const has = state.budgets[c.id] > 0;
   sheet({
     title: `${c.icon} ${esc(c.name)}`,
-    body: `${fAmount('Oylik limit', 'limit', { value: state.budgets[c.id] || 0, focus: true, big: true })}<p class="muted small">O'tgan oylar o'rtachasi: <b>${money(avgCat(c.id))}</b>. Limitni 0 qoldirsangiz o'chiriladi.</p>`,
+    body: `${fAmount('Oylik limit', 'limit', { value: state.budgets[c.id] || 0, focus: true, big: true })}<p class="muted small">O'tgan oylar o'rtachasi: <b>${money(avgCat(c.id))}</b>.</p>
+      <button type="button" class="btn ghost sm" data-editcat>${icon('edit', 16)} Kategoriyani tahrirlash / o'chirish</button>`,
+    onMount(form) {
+      form.querySelector('[data-editcat]').addEventListener('click', () => {
+        closeSheet();
+        setTimeout(() => openCatSheet(c), 300);
+      });
+    },
+    danger: has ? { label: "Limitni o'chirish", confirm: `«${c.name}» limiti o'chirilsinmi?`, fn: () => (delete state.budgets[c.id], commit(), toast("Limit o'chirildi", { type: 'ok' })) } : null,
     onSubmit(d) {
       const v = amt(d.limit);
       if (v > 0) state.budgets[c.id] = v;
@@ -126,9 +142,10 @@ actions['budget:auto'] = () => {
       form.addEventListener('input', run);
       run();
     },
-    onSubmit(d, form) {
+    async onSubmit(d, form) {
       const inc = amt(d.income);
       if (!(inc > 0)) return toast('Daromadni kiriting', { type: 'warn' }), false;
+      if (Object.keys(state.budgets).length && !(await confirmBox('Mavjud byudjetingiz yangi reja bilan almashtiriladi. Davom etasizmi?', { ok: 'Almashtirish' }))) return false;
       state.budgets = autoPlan(inc);
       commit();
       toast('Byudjet tuzildi ✨', { type: 'ok' });

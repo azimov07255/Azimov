@@ -20,6 +20,7 @@ function fresh() {
     subs: [],
     businesses: [],
     challenge: { base: 1000, done: [] },
+    seedCats: DEFAULT_CATS.map((c) => c.id),
     rules: {}, // merchant -> categoryId, learned from bank-message imports
     imported: [], // hashes of already imported bank messages
   };
@@ -38,8 +39,17 @@ function normalize(s) {
   const f = fresh();
   const out = { ...f, ...s, settings: { ...f.settings, ...(s.settings || {}) } };
   if (!out.categories?.length) out.categories = f.categories;
-  // make sure all default categories exist (new versions may add some)
-  for (const c of DEFAULT_CATS) if (!out.categories.find((x) => x.id === c.id)) out.categories.push(structuredClone(c));
+  // Default categories are seeded once. `seedCats` remembers which were already offered,
+  // so a default the user deleted stays deleted, while defaults added in later versions still appear.
+  const defIds = DEFAULT_CATS.map((c) => c.id);
+  const seeded = new Set(s.seedCats || out.categories.map((c) => c.id).filter((id) => defIds.includes(id)));
+  for (const c of DEFAULT_CATS) {
+    if (!seeded.has(c.id)) {
+      out.categories.push(structuredClone(c));
+      seeded.add(c.id);
+    }
+  }
+  out.seedCats = [...seeded];
   return out;
 }
 

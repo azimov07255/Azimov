@@ -26,9 +26,22 @@ function cloudCard() {
     <div class="btn-col"><button class="btn ghost" data-act="cloud:sync">${icon('repeat', 16)} Hozir sinxronlash</button><button class="btn danger-ghost" data-act="cloud:logout">Chiqish</button></div>`, { cls: 'c6' });
 }
 
+function catManager() {
+  const used = {};
+  state.transactions.forEach((t) => t.categoryId && (used[t.categoryId] = (used[t.categoryId] || 0) + 1));
+  const rows = (type) =>
+    state.categories
+      .filter((c) => c.type === type)
+      .map((c) => `<button class="row" data-act="cat:edit" data-id="${c.id}"><span class="row-ico" style="--c:${c.color}">${c.icon}</span><span class="row-main"><b>${esc(c.name)}</b><small>${used[c.id] ? used[c.id] + ' ta yozuv' : "Yozuv yo'q"}${type === 'expense' ? ' · ' + (c.grp === 'need' ? 'Zarur' : 'Xohish') : ''}</small></span>${icon('edit', 16)}</button>`)
+      .join('');
+  return `<p class="muted small">Istalgan kategoriyani tahrirlash yoki o'chirish mumkin. O'chirilganda yozuvlar boshqa kategoriyaga o'tkaziladi.</p>
+    <details class="how" open><summary>Xarajat kategoriyalari (${state.categories.filter((c) => c.type === 'expense').length})</summary><div class="rows">${rows('expense')}</div></details>
+    <details class="how"><summary>Daromad kategoriyalari (${state.categories.filter((c) => c.type === 'income').length})</summary><div class="rows">${rows('income')}</div></details>
+    <button class="btn ghost" data-act="cat:new">${icon('plus', 16)} Kategoriya qo'shish</button>`;
+}
+
 export function renderSettings() {
   const S = state.settings;
-  const custom = state.categories.filter((c) => c.custom);
   return `
   <div class="page-head"><div><h1>Sozlamalar</h1><p class="sub">Hisoblar, kategoriyalar va ma'lumotlar</p></div></div>
   <div class="grid">
@@ -42,7 +55,7 @@ export function renderSettings() {
       <label class="check"><input type="checkbox" id="setHide" ${S.hide ? 'checked' : ''}><span>Summalarni yashirish (maxfiylik rejimi)</span></label>`, { cls: 'c6' })}
     ${cloudCard()}
     ${card('Hisoblar', `<div class="rows">${state.accounts.map((a) => `<button class="row" data-act="acct:edit" data-id="${a.id}"><span class="row-ico" style="--c:${a.color}">${a.icon}</span><span class="row-main"><b>${esc(a.name)}</b><small>${ACCOUNT_TYPES.find((t) => t[0] === a.type)?.[1] || ''}</small></span><span class="amount">${money(balanceOf(a.id))}</span></button>`).join('')}</div><button class="btn ghost" data-act="acct:new">${icon('plus', 16)} Hisob qo'shish</button>`, { cls: 'c6' })}
-    ${card('Kategoriyalar', `${custom.length ? `<div class="rows">${custom.map((c) => `<button class="row" data-act="cat:edit" data-id="${c.id}"><span class="row-ico" style="--c:${c.color}">${c.icon}</span><span class="row-main"><b>${esc(c.name)}</b><small>${c.type === 'income' ? 'Daromad' : 'Xarajat'}</small></span>${icon('chevR', 16)}</button>`).join('')}</div>` : `<p class="muted pad">Standart ${state.categories.length} ta kategoriya mavjud. O'zingizniki qo'shishingiz mumkin.</p>`}<button class="btn ghost" data-act="cat:new">${icon('plus', 16)} Kategoriya qo'shish</button>`, { cls: 'c6' })}
+    ${card('Kategoriyalar', catManager(), { cls: 'c6' })}
     ${card("Ma'lumotlar", `
       <p class="muted small">Ma'lumotlar faqat shu qurilmada (brauzer xotirasida) saqlanadi. Muntazam zaxira nusxa oling.</p>
       <div class="btn-col">
@@ -137,25 +150,60 @@ actions['acct:new'] = () => acctSheet();
 actions['acct:edit'] = (el) => acctSheet(state.accounts.find((a) => a.id === el.dataset.id));
 
 /* ---------- categories ---------- */
-function catSheet(c = null) {
-  const v = c || { name: '', icon: '🧾', color: COLORS[state.categories.length % COLORS.length], type: 'expense' };
+export function openCatSheet(c = null, preset = {}) {
+  const v = c || { name: '', icon: '🧾', color: COLORS[state.categories.length % COLORS.length], type: preset.type || 'expense', grp: 'want' };
+  const used = c ? state.transactions.filter((t) => t.categoryId === c.id).length : 0;
   sheet({
     title: c ? 'Kategoriyani tahrirlash' : 'Yangi kategoriya',
-    body: `${c ? '' : fSeg('type', [['expense', 'Xarajat', 'neg'], ['income', 'Daromad', 'pos']], v.type)}
+    body: `${c ? `<p class="muted small">${v.type === 'income' ? 'Daromad' : 'Xarajat'} kategoriyasi · ${used} ta yozuv</p>` : fSeg('type', [['expense', 'Xarajat', 'neg'], ['income', 'Daromad', 'pos']], v.type)}
       ${fText('Nomi', 'name', { value: v.name, focus: !c })}
+      ${v.type === 'expense' || !c ? `<div id="grpWrap" ${v.type === 'income' ? 'hidden' : ''}><div class="field"><span>Xarajat turi (50/30/20 reja uchun)</span>${fSeg('grp', [['need', 'Zarur'], ['want', 'Xohish']], v.grp || 'want')}</div></div>` : ''}
       ${fEmoji('icon', v.icon, EMOJI)}${fColor('color', v.color)}`,
-    danger: c ? { label: "O'chirish", confirm: "Kategoriya o'chadi (tranzaksiyalar «Noma'lum» bo'lib qoladi).", fn: () => ((state.categories = state.categories.filter((x) => x.id !== c.id)), commit()) } : null,
+    onMount(form) {
+      form.addEventListener('change', (e) => {
+        if (e.target.name === 'type') form.querySelector('#grpWrap').hidden = e.target.value === 'income';
+      });
+    },
+    danger: c ? { label: "O'chirish", confirm: `«${c.name}» kategoriyasini o'chirasizmi?`, fn: () => removeCategory(c) } : null,
     onSubmit(d) {
       if (!d.name.trim()) return toast('Nomini kiriting', { type: 'warn' }), false;
       const data = { name: d.name.trim(), icon: d.icon, color: d.color };
-      if (c) Object.assign(c, data);
-      else state.categories.push({ id: uid(), type: d.type, custom: true, grp: 'want', ...data });
+      if (c) {
+        Object.assign(c, data);
+        if (c.type === 'expense' && d.grp) c.grp = d.grp;
+      } else state.categories.push({ id: uid(), type: d.type, custom: true, grp: d.type === 'expense' ? d.grp || 'want' : undefined, ...data });
       commit();
+      toast('Saqlandi', { type: 'ok' });
     },
   });
 }
-actions['cat:new'] = () => catSheet();
-actions['cat:edit'] = (el) => catSheet(state.categories.find((c) => c.id === el.dataset.id));
+
+function removeCategory(c) {
+  const same = state.categories.filter((x) => x.type === c.type && x.id !== c.id);
+  if (!same.length) return toast("Oxirgi kategoriyani o'chirib bo'lmaydi", { type: 'warn' });
+  const used = state.transactions.filter((t) => t.categoryId === c.id).length + state.subs.filter((s) => s.categoryId === c.id).length;
+  const finish = (to) => {
+    if (to) {
+      state.transactions.forEach((t) => t.categoryId === c.id && (t.categoryId = to));
+      state.subs.forEach((s) => s.categoryId === c.id && (s.categoryId = to));
+      for (const k of Object.keys(state.rules || {})) if (state.rules[k] === c.id) state.rules[k] = to;
+    }
+    delete state.budgets[c.id];
+    state.categories = state.categories.filter((x) => x.id !== c.id);
+    commit();
+    toast(`«${c.name}» o'chirildi`, { type: 'ok' });
+  };
+  if (!used) return finish(null);
+  const fallback = same.find((x) => x.id === 'c_other' || x.id === 'i_other')?.id || same[0].id;
+  sheet({
+    title: `«${esc(c.name)}» ni o'chirish`,
+    submit: "O'chirish va o'tkazish",
+    body: `<p class="muted small"><b>${used} ta</b> yozuv shu kategoriyada. Ularni qaysi kategoriyaga o'tkazamiz?</p>${fSelect("Yangi kategoriya", 'to', same.map((x) => [x.id, `${x.icon} ${x.name}`]), fallback)}`,
+    onSubmit: (d) => finish(d.to),
+  });
+}
+actions['cat:new'] = () => openCatSheet();
+actions['cat:edit'] = (el) => openCatSheet(state.categories.find((c) => c.id === el.dataset.id));
 
 /* ---------- cloud ---------- */
 const AUTH_ERR = [
