@@ -7,6 +7,7 @@ import { ring, donut, bars, spark } from '../charts.js';
 import { actions, progress, card, empty } from '../ui.js';
 import { txRow, quickAdd } from './tx.js';
 import { overdueSubs } from './subs.js';
+import { unclosedMonth } from './budgets.js';
 
 const EXAMPLES = ['taksi 25 ming', 'kafe 80k', 'bozor 150 000', '+maosh 5 mln'];
 
@@ -65,6 +66,9 @@ export function renderDashboard() {
   /* ---- monthly report ready ---- */
   const pk = addMonths(key, -1);
   const repBanner = d.getDate() <= 10 && S.reportSeen !== pk && stats(pk).count > 0 ? `<a class="banner info" href="#/reports/${pk}">${icon('sparkles', 18)}<span><b>${monthLabel(pk)} hisoboti tayyor</b> — oylik tahlil va PDF</span>${icon('chevR', 18)}</a>` : '';
+
+  const um = unclosedMonth();
+  const closeBanner = um && d.getDate() <= 15 ? `<div class="banner info" data-act="close:month" data-key="${um}" role="button" style="cursor:pointer">${icon('check', 18)}<span><b>${monthLabel(um)} oyini yoping</b> — natija va tejalgan pulni maqsadlarga taqsimlash</span>${icon('chevR', 18)}</div>` : '';
 
   /* ---- safe to spend ---- */
   const spent = f.limit > 0 ? Math.min(1, f.spent / f.limit) : 0;
@@ -159,7 +163,7 @@ export function renderDashboard() {
 
   return `
   <div class="page-head greet"><div><h1>${greeting()}${S.name ? ', ' + esc(S.name) : ''} 👋</h1><p class="sub">${d.getDate()}-${MONTHS_GEN[d.getMonth()]}, ${d.getFullYear()}</p></div></div>
-  ${demoBanner}${odBanner}${repBanner}
+  ${demoBanner}${odBanner}${closeBanner}${repBanner}
   <div class="grid">
     <div class="c8">${hero}${accs}</div>
     <div class="c4">${quick}${state.goals.length ? `<div class="alloc card"><span>Erkin mablag'</span><b>${money(totalBalance() - goalsAllocated())}</b><small class="muted">Maqsadlarga ajratilgan: ${money(goalsAllocated())}</small></div>` : ''}</div>

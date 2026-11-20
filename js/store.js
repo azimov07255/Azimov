@@ -20,6 +20,7 @@ function fresh() {
     subs: [],
     businesses: [],
     challenge: { base: 1000, done: [] },
+    closings: {}, // monthKey -> result of the "close month" ritual
     seedCats: DEFAULT_CATS.map((c) => c.id),
     rules: {}, // merchant -> categoryId, learned from bank-message imports
     imported: [], // hashes of already imported bank messages

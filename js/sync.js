@@ -254,6 +254,7 @@ export function mergeStates(local, remote) {
   out.businesses = [...biz.values()];
   out.budgets = { ...(remote.budgets || {}), ...(local.budgets || {}) };
   out.settings = { ...(remote.settings || {}), ...(local.settings || {}) };
+  out.closings = { ...(remote.closings || {}), ...(local.closings || {}) };
   out.seedCats = [...new Set([...(remote.seedCats || []), ...(local.seedCats || [])])];
   out.rules = { ...(remote.rules || {}), ...(local.rules || {}) };
   out.imported = [...new Set([...(remote.imported || []), ...(local.imported || [])])];

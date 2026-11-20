@@ -657,3 +657,17 @@ textarea.input { resize: vertical; }
 
 .banner.demo { background: color-mix(in srgb, var(--info) 14%, transparent); border-color: color-mix(in srgb, var(--info) 40%, transparent); }
 .banner.demo .btn { flex: none; }
+
+/* ---------- monthly plan / close month ---------- */
+.plan-bar { display: flex; height: 14px; border-radius: 99px; overflow: hidden; background: var(--track); margin: 4px 0 14px; }
+.plan-bar i { display: block; height: 100%; transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.plan-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-bottom: 10px; font-size: 13px; }
+.plan-legend > div { display: flex; align-items: center; gap: 8px; }
+.plan-legend i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.plan-legend span { color: var(--muted); flex: 1; }
+@media (max-width: 480px) { .plan-legend { grid-template-columns: 1fr; } }
+.close-card { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--surface)), var(--surface)); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.cc { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cc > div { flex: 1; min-width: 200px; }
+.cc-ico { font-size: 32px; }
+.alloc-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }

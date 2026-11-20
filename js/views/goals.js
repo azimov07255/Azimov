@@ -69,13 +69,14 @@ function goalSheet(g = null, preset = {}) {
       ${fAmount('Maqsad summasi', 'target', { value: v.target, big: true })}
       ${fAmount("Hozirgacha yig'ilgan", 'saved', { value: v.saved })}
       ${fDate('Muddat (ixtiyoriy)', 'deadline', v.deadline, { clearable: true })}
+      ${fAmount("Oyiga ajratish rejasi (ixtiyoriy)", 'monthly', { value: v.monthly || 0 })}
       ${fEmoji('icon', v.icon, ['🎯', '🛡️', '🚀', '🏠', '🚗', '✈️', '🎓', '💍', '📱', '💻', '🏪', '🌴', '🕋', '👶', '🐄', '📈'])}
       ${fColor('color', v.color)}`,
     danger: g ? { label: "O'chirish", fn: () => ((state.goals = state.goals.filter((x) => x.id !== g.id)), commit(), toast("O'chirildi", { type: 'ok' })) } : null,
     onSubmit(d) {
       const target = amt(d.target);
       if (!d.name.trim() || !(target > 0)) return toast('Nom va summani kiriting', { type: 'warn' }), false;
-      const data = { name: d.name.trim(), target, saved: amt(d.saved), deadline: d.deadline || '', icon: d.icon, color: d.color };
+      const data = { name: d.name.trim(), target, saved: amt(d.saved), deadline: d.deadline || '', monthly: amt(d.monthly), icon: d.icon, color: d.color };
       if (g) Object.assign(g, data);
       else state.goals.push({ id: uid(), ...data });
       commit();
