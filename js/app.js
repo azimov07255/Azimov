@@ -15,6 +15,7 @@ import { renderSettings, afterSettings } from './views/settings.js';
 import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
 import { renderImport, afterImport, setImportText } from './views/import.js';
+import { renderRoundup, afterRoundup, renderWhatIf, afterWhatIf, renderPayoff, afterPayoff } from './views/savings.js';
 import { renderDaily } from './views/daily.js';
 import { renderReminders, afterReminders } from './views/reminders.js';
 import { initNotify, activeReminders } from './notify.js';
@@ -39,7 +40,7 @@ const NAV = [
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -54,6 +55,9 @@ const ROUTES = {
   reminders: { render: renderReminders, after: (r) => afterReminders(r) },
   scan: { render: renderScan, after: (r) => afterScan(r) },
   reports: { render: (p) => renderReports(p), after: (r) => afterReports(r) },
+  roundup: { render: renderRoundup, after: (r) => afterRoundup(r) },
+  whatif: { render: renderWhatIf, after: (r) => afterWhatIf(r) },
+  payoff: { render: renderPayoff, after: (r) => afterPayoff(r) },
   tools: { render: renderTools },
   settings: { render: renderSettings, after: (r) => afterSettings(r) },
   more: { render: renderMore },
@@ -144,12 +148,28 @@ export function render() {
   const view = document.getElementById('view');
   const sy = lastRoute === key ? window.scrollY : 0;
   const route = ROUTES[name];
+  let html;
   try {
-    view.innerHTML = `<div class="view-in">${route.render(param)}</div>`;
+    html = `<div class="view-in">${route.render(param)}</div>`;
+  } catch (e) {
+    console.error(e);
+    html = `<div class="card"><h3>Xatolik</h3><p class="muted">${esc(e.message)}</p></div>`;
+  }
+  try {
+    view.innerHTML = html;
+  } catch (e) {
+    // Re-rendering from inside a text field's blur/change handler can make the browser throw while it
+    // removes the focused node. Nothing is lost: run the same render right after the event finishes.
+    if (e?.name === 'NotFoundError') {
+      setTimeout(render, 0);
+      return;
+    }
+    throw e;
+  }
+  try {
     route.after?.(view);
   } catch (e) {
     console.error(e);
-    view.innerHTML = `<div class="card"><h3>Xatolik</h3><p class="muted">${esc(e.message)}</p></div>`;
   }
   updateNav(name);
   updateSyncUI();

@@ -21,6 +21,9 @@ const TOOLS = [
 
 export function renderTools() {
   return `<div class="page-head"><div><h1>Asboblar</h1><p class="sub">Pul bo'yicha qaror qabul qilishga yordam beruvchi kalkulyatorlar</p></div></div>
+  <h3 class="sec" style="margin-top:0">✨ Aqlli vositalar</h3>
+  <div class="tools smart"><a class="tool" href="#/roundup"><span class="tool-ico">🐖</span><b>Yaxlitlab tejash</b><small>Har xarajatni yaxlitlab, farqini maqsadga yig'adi</small></a><a class="tool" href="#/whatif"><span class="tool-ico">🔮</span><b>Nima bo'ladi agar...</b><small>Xarajat yoki daromad o'zgarsa, kelajak qanday bo'ladi</small></a><a class="tool" href="#/payoff"><span class="tool-ico">🏁</span><b>Qarzni tez yopish</b><small>Qaysi qarzni birinchi yopish, necha oyda tugaydi</small></a></div>
+  <h3 class="sec">🧮 Kalkulyatorlar</h3>
   <div class="tools">${TOOLS.map(([id, ico, name, sub]) => `<button class="tool" data-act="tool:open" data-tool="${id}"><span class="tool-ico">${ico}</span><b>${name}</b><small>${sub}</small></button>`).join('')}</div>`;
 }
 

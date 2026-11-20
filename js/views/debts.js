@@ -2,7 +2,7 @@ import { state, commit, debtPaid, debtLeft, iOwe, owedToMe, addTx, balanceOf } f
 import { esc, uid, today, diffDays, fmtDate, sum } from '../utils.js';
 import { money, pct } from '../fmt.js';
 import { icon } from '../icons.js';
-import { actions, sheet, fText, fAmount, fDate, fSeg, fSelect, progress, card, empty, toast, amt } from '../ui.js';
+import { actions, sheet, fText, fAmount, fNumber, fDate, fSeg, fSelect, progress, card, empty, toast, amt } from '../ui.js';
 
 export function renderDebts() {
   const t = today();
@@ -32,6 +32,7 @@ export function renderDebts() {
     <div class="c4 card stat-card"><span class="eyebrow">Menga qarzdor</span><b class="big pos">${money(owedToMe())}</b><small class="muted">${lent.filter((d) => debtLeft(d) > 0).length} ta faol</small></div>
     <div class="c4 card stat-card"><span class="eyebrow">Sof holat</span><b class="big ${owedToMe() - iOwe() >= 0 ? 'pos' : 'neg'}">${money(owedToMe() - iOwe(), { sign: true })}</b><small class="muted">${small ? `💡 Avval «${esc(small.person)}» qarzini yoping (eng kichigi — "qor ko'chkisi" usuli)` : 'Qarz yuki yo\'q'}</small></div>
   </div>
+  ${borrowed.filter((d) => debtLeft(d) > 0).length ? `<a class="banner info" href="#/payoff">${icon('sparkles', 18)}<span><b>Qarzni tez yopish rejasi</b> — qaysi birini birinchi yopish foydali, necha oyda tugaydi</span>${icon('chevR', 18)}</a>` : ''}
   ${borrowed.length ? `<h3 class="sec">📤 Men qarzdorman</h3><div class="debts">${borrowed.sort(sortFn).map(item).join('')}</div>` : ''}
   ${lent.length ? `<h3 class="sec">📥 Menga qarzdor</h3><div class="debts">${lent.sort(sortFn).map(item).join('')}</div>` : ''}
   ${!state.debts.length ? empty('🤝', "Qarz yozuvlari yo'q", "Qarz olgan yoki bergan bo'lsangiz yozib qo'ying — muddat yaqinlashganda eslatib turaman.") : ''}`;
@@ -47,13 +48,14 @@ function debtSheet(d = null) {
       ${fText('Kim bilan', 'person', { value: v.person, placeholder: 'Ism', focus: !d })}
       ${fAmount('Summa', 'amount', { value: v.amount, big: true })}
       <div class="grid-2">${fDate('Sana', 'date', v.date)}${fDate('Qaytarish muddati', 'due', v.due, { clearable: true })}</div>
+      <div id="dbtx" class="grid-2">${fNumber("Yillik foiz (bo'lsa)", 'rate', { value: v.rate || 0, suffix: '%', step: 0.5, min: 0 })}${fAmount("Oylik minimal to'lov", 'minPay', { value: v.minPay || 0 })}</div>
       ${fText('Izoh', 'note', { value: v.note, placeholder: 'Ixtiyoriy' })}
       ${d ? '' : fSelect('Hisobga yozish', 'accountId', accOpts(), '')}`,
     danger: d ? { label: "O'chirish", fn: () => ((state.debts = state.debts.filter((x) => x.id !== d.id)), commit(), toast("O'chirildi", { type: 'ok' })) } : null,
     onSubmit(f) {
       const amount = amt(f.amount);
       if (!f.person.trim() || !(amount > 0)) return toast('Ism va summani kiriting', { type: 'warn' }), false;
-      const data = { type: f.type, person: f.person.trim(), amount, date: f.date, due: f.due || '', note: f.note.trim() };
+      const data = { type: f.type, person: f.person.trim(), amount, date: f.date, due: f.due || '', note: f.note.trim(), rate: Number(f.rate) || 0, minPay: amt(f.minPay) };
       if (d) Object.assign(d, data);
       else {
         state.debts.push({ id: uid(), payments: [], ...data });

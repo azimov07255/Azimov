@@ -760,3 +760,20 @@ textarea.input { resize: vertical; }
 .miss-b { display: flex; gap: 8px; }
 .miss-b .input { flex: 1; }
 .miss-b .amt { max-width: 130px; text-align: right; }
+
+/* ---------- smart tools: round-up, what-if, payoff ---------- */
+.tools.smart { margin-bottom: 8px; }
+.tools.smart .tool { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--surface)); }
+.ru-example { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 14px; margin: 4px 0 10px; border-radius: 16px; background: var(--surface-2); font-weight: 650; flex-wrap: wrap; }
+.wf-cuts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.wf-cut .split { margin-bottom: 4px; }
+.po-strats { display: flex; flex-direction: column; gap: 8px; }
+.po-s { text-align: left; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; transition: 0.15s; }
+.po-s.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
+.po-n { display: flex; justify-content: space-between; margin-top: 4px; font-weight: 650; }
+.po-order { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.po-o { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.po-i { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--grad); color: #fff; font-weight: 700; font-size: 13px; flex: none; }
+.po-o small { display: block; }
+.po-d { text-align: right; }
+.po-d small { display: block; }

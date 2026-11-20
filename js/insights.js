@@ -1,6 +1,8 @@
 import { state, totalBalance, catOf, budgetTotal, subsMonthly, iOwe, debtLeft } from './store.js';
 import { today, monthKey, addMonths, daysInMonth, addDays, avg, sum, clamp, WEEKDAYS, parseYmd, diffDays, fmtDate } from './utils.js';
 import { money, short, pct, curCode } from './fmt.js';
+import { futureValue } from './planner.js';
+export { futureValue };
 
 export const curKey = () => monthKey(today());
 export const monthsBack = (n, end = curKey()) => Array.from({ length: n }, (_, i) => addMonths(end, -(n - 1 - i)));
@@ -263,13 +265,6 @@ export function insights() {
   return out.sort((a, c) => order[a.tone] - order[c.tone]).slice(0, 6);
 }
 
-export function futureValue(monthly, annualRate, years, start = 0) {
-  const r = annualRate / 12;
-  const n = years * 12;
-  if (r === 0) return start + monthly * n;
-  return start * Math.pow(1 + r, n) + monthly * ((Math.pow(1 + r, n) - 1) / r);
-}
-
 /* ---------- business readiness ---------- */
 export function businessReadiness() {
   const b = baseline();
@@ -287,4 +282,13 @@ export function businessReadiness() {
     { ok: dataMonths() >= 3, title: "Kamida 3 oylik hisob yuritilgan", note: `${dataMonths()} oylik ma'lumot` },
   ];
   return { items, done: items.filter((i) => i.ok).length };
+}
+
+// average monthly spend of one category over the last (up to) 3 months that have data
+export function avgCategory(id) {
+  const ms = monthsBack(4).slice(0, 3).map(stats).filter((x) => x.count > 0);
+  return ms.length ? sum(ms, (x) => x.byCat[id] || 0) / ms.length : 0;
+}
+export function topSpendCats(n = 6) {
+  return state.categories.filter((c) => c.type === 'expense').map((c) => ({ c, avg: avgCategory(c.id) })).filter((x) => x.avg > 0).sort((a, b) => b.avg - a.avg).slice(0, n);
 }

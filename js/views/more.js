@@ -12,6 +12,9 @@ const ITEMS = [
   ['scan', 'Chek skanerlash', 'camera', "Chek rasmini olsangiz — o'zi yoziladi", '#fbbf24'],
   ['reports', 'Hisobotlar', 'file', "Oylik tahlil va PDF", '#60a5fa'],
   ['business', 'Biznes', 'briefcase', "Foyda va kapital qaytishi", '#22d3ee'],
+  ['roundup', 'Yaxlitlab tejash', 'wallet', "Sezilmay yig'ish", '#fbbf24'],
+  ['whatif', 'Nima bo\'ladi agar', 'sparkles', "Kelajak simulyatori", '#34d399'],
+  ['payoff', 'Qarzni tez yopish', 'target', "Qarz rejasi", '#fb7185'],
   ['tools', 'Asboblar', 'sliders', "Kalkulyatorlar va challenge", '#fbbf24'],
   ['settings', 'Sozlamalar', 'gear', "Hisoblar, kategoriyalar, ma'lumot", '#94a3b8'],
 ];

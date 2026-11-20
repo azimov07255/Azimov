@@ -22,6 +22,10 @@ Pulni to'g'ri sarflash, tejash va kelajakdagi biznesga tayyorlanish uchun shaxsi
 | **Oylik reja va «Oyni yopish»** | Byudjet sahifasida «har so'mga vazifa» o'lchovi (daromad − byudjet − maqsadlarga hissa = vazifasiz qolgan pul); oy oxirida natijani ko'rib, tejalgan pulni maqsadlarga taqsimlash, ketma-ket oylar «seriyasi» |
 | **Chek skanerlash** | Chek rasmi → qurilmada OCR (Tesseract.js, lotin + kirill) → do'kon, jami summa, sana, kategoriya; tahrirlab qo'shasiz |
 | **Eslatmalar** | To'lov/qarz muddati, byudjet 80%/100%, oyni yopish, kechki eslatma; qo'ng'iroqcha belgisi; ilova ochiq paytda tizim bildirishnomasi; **ilova yopiq paytda Web Push** (akkaunt kerak) |
+| **Kunlik daromad** | Dada/aka kabi manbalar: qat'iy yoki oraliq summa, ish kunlari, har kuni yoki haftalik jamlab olish; har kun «Oldim / Ishladim / Dam»; hafta ko'rinishi, hisob-kitob, belgilanmagan kunlarni to'ldirish |
+| **Yaxlitlab tejash** | Har xarajatni yaxlitlab (23 400 → 25 000), farqi avtomatik maqsadga; tahrirlash/o'chirish va bank importida ham izchil; haqiqiy pulni jamg'arma hisobiga ko'chirish |
+| **Nima bo'ladi agar** | Kategoriya bo'yicha qisqartirish, daromad o'zgarishi, foyda va muddat → kelajak prognozi, maqsadga yetish vaqti, byudjetga qo'llash |
+| **Qarzni tez yopish** | Foiz va minimal to'lov bilan 3 usul (qor ko'chkisi / eng qimmat foiz / muddat) solishtiriladi: necha oy, qancha foiz, qaysi tartibda |
 | **Sozlamalar** | Hisoblar, o'z kategoriyalaringiz, valyuta (UZS/USD/EUR/RUB), qorong'i/yorug' mavzu, summalarni yashirish, JSON zaxira va tiklash, CSV eksport |
 
 ## Ishga tushirish
@@ -47,6 +51,8 @@ js/charts.js          SVG grafiklar (donut, bar, area, ring)
 js/reminders-core.js  eslatma qoidalari (toza, serverda ham ishlatiladi)
 js/notify.js, push.js  bildirishnomalar va Web Push obunasi
 js/receipt.js         chek matni parseri; views/scan.js — OCR sahifasi
+js/planner.js         toza hisob-kitob: yaxlitlash, prognoz, qarz grafigi
+js/streams.js         kunlik daromad manbalari va kun yozuvlari
 js/sync.js            Supabase auth + sinxronlash + to'qnashuvlarni hal qilish
 js/sms.js             bank xabarlari parseri (sof funksiyalar)
 supabase/migrations   bulut jadvali va RLS siyosatlari

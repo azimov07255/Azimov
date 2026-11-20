@@ -1,6 +1,7 @@
 import { uid, today, monthKey } from './utils.js';
 import { DEFAULT_CATS } from './data.js';
 import { configure } from './fmt.js';
+import { ruAmount } from './planner.js';
 
 const KEY = 'azimov.finance.v1';
 
@@ -23,6 +24,7 @@ function fresh() {
     streams: [], // recurring daily income sources ("Dadam", "Akam"): {id,name,days:[1..5],mode,amount|min,max,payMode,payDay,...}
     dayLog: {}, // streamId -> { 'YYYY-MM-DD': {s:'paid'|'earned'|'off', a, tx?, note?} }
     dismissed: {}, // reminder id -> timestamp it was dismissed
+    ru: { on: false, step: 5000, goalId: '', since: '', moved: 0, ledger: {}, applied: {} }, // round-up savings: ledger = txId -> {a, g, s}
     closings: {}, // monthKey -> result of the "close month" ritual
     seedCats: DEFAULT_CATS.map((c) => c.id),
     rules: {}, // merchant -> categoryId, learned from bank-message imports
@@ -70,7 +72,47 @@ export function save() {
     console.warn('Save failed', e);
   }
 }
+/**
+ * Round-up savings. Runs on EVERY commit, so it works no matter how an expense got in (quick add, bank import, receipt, edit, delete).
+ * ledger[txId] = {a: spare change, g: goal it went to, s: step used}. Goal totals are kept in line with the ledger via ru.applied,
+ * so editing/deleting a transaction (or merging two devices) always converges to the right number.
+ */
+export function reconcileRoundups() {
+  const ru = state.ru;
+  if (!ru) return;
+  ru.ledger ||= {};
+  ru.applied ||= {};
+  const goalOk = !!ru.goalId && state.goals.some((g) => g.id === ru.goalId);
+  const live = new Map();
+  for (const t of state.transactions) {
+    if (t.type !== 'expense') continue;
+    live.set(t.id, t);
+    const cur = ru.ledger[t.id];
+    if (cur) cur.a = ruAmount(t.amount, cur.s); // edited amount -> recompute with the step it was created with
+    else if (ru.on && goalOk && t.date >= (ru.since || '9999')) {
+      const a = ruAmount(t.amount, ru.step);
+      if (a > 0) ru.ledger[t.id] = { a, g: ru.goalId, s: ru.step };
+    }
+  }
+  const goalIds = new Set(state.goals.map((g) => g.id));
+  const sums = {};
+  for (const [id, e] of Object.entries(ru.ledger)) {
+    if (!live.has(id) || !goalIds.has(e.g) || !(e.a > 0)) delete ru.ledger[id]; // transaction or goal is gone
+    else sums[e.g] = (sums[e.g] || 0) + e.a;
+  }
+  for (const g of state.goals) {
+    const L = Math.round((sums[g.id] || 0) * 100) / 100;
+    const A = ru.applied[g.id] || 0;
+    if (L !== A) {
+      g.saved = Math.max(0, Math.round(((g.saved || 0) + (L - A)) * 100) / 100);
+      ru.applied[g.id] = L;
+    }
+  }
+  for (const id of Object.keys(ru.applied)) if (!goalIds.has(id)) delete ru.applied[id];
+}
+
 export function commit() {
+  reconcileRoundups();
   configure(state.settings.currency, state.settings.hide);
   clearTimeout(saveTimer);
   save();
