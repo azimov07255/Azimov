@@ -29,7 +29,7 @@ const payText = (st) => (st.payMode === 'weekly' ? `haftalik jamlanadi (${DOW_LO
 function entryPill(e) {
   if (!e) return '';
   if (e.s === 'paid') return `<span class="pill pos">✅ Oldim ${money(e.a)}</span>`;
-  if (e.s === 'earned' && e.lunch) return `<span class="pill warn">🕒 Ishladim ${money(e.a)} · 🍽️ tushlik −${money(e.lunch)} · qoldi ${money(net(e))}</span>`;
+  if (e.s === 'earned' && e.lunch) return `<span class="pill warn">🕒 Ishladim ${money(e.a)}</span><span class="lunch-note">🍽️ tushlik −${money(e.lunch)} · qoldi <b>${money(net(e))}</b></span>`;
   if (e.s === 'earned') return `<span class="pill warn">🕒 Ishladim ${money(e.a)} · olinmagan</span>`;
   return `<span class="pill">🚫 Dam${e.note ? ' · ' + esc(e.note) : ''}</span>`;
 }

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.9",
+    "date": "2026-11-21",
+    "notes": [
+      "Tuzatildi: bosh sahifa yon tomonga siljib ketardi (tushlik yozuvi sig'masdi)",
+      "Ro'yxatdan o'tish yopiq bo'lsa, tushunarli xabar ko'rsatiladi"
+    ]
+  },
+  {
     "version": "1.8",
     "date": "2026-11-21",
     "notes": [

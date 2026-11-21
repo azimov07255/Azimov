@@ -1,11 +1,20 @@
 {
-  "hash": "51f2ef67bd5a",
-  "version": "1.8",
+  "hash": "cd23b6bc48fc",
+  "version": "1.9",
   "released": "2026-11-21",
   "notes": [
-    "Kunlik daromadda «Tushlik puli»: ishlagan kuni tushlikka olgan pulingizni yozing, kunlik haqdan ayrilib, qolgani «olinmagan» bo'lib turadi"
+    "Tuzatildi: bosh sahifa yon tomonga siljib ketardi (tushlik yozuvi sig'masdi)",
+    "Ro'yxatdan o'tish yopiq bo'lsa, tushunarli xabar ko'rsatiladi"
   ],
   "history": [
+    {
+      "version": "1.9",
+      "date": "2026-11-21",
+      "notes": [
+        "Tuzatildi: bosh sahifa yon tomonga siljib ketardi (tushlik yozuvi sig'masdi)",
+        "Ro'yxatdan o'tish yopiq bo'lsa, tushunarli xabar ko'rsatiladi"
+      ]
+    },
     {
       "version": "1.8",
       "date": "2026-11-21",
@@ -46,14 +55,6 @@
         "Yaxlitlab tejash: har xarajatning farqi maqsadga yig'iladi",
         "«Nima bo'ladi agar» simulyatori",
         "Qarzni tez yopish rejasi: 3 usul solishtiriladi"
-      ]
-    },
-    {
-      "version": "1.3",
-      "date": "2026-11-20",
-      "notes": [
-        "Kunlik daromad: dada/aka kabi manbalar, oldim / ishladim / dam, haftalik hisob-kitob",
-        "Bosh sahifada «Bugun» vidjeti"
       ]
     }
   ]

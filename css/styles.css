@@ -1001,3 +1001,9 @@ body.kb-open .adv-dock { padding-bottom: calc(10px + env(safe-area-inset-bottom)
 .lunch-left { margin-top: 10px; font-size: 14px; }
 .lunch-left[hidden] { display: none; }
 .lunch-left b { color: var(--warn); font-size: 16px; }
+
+.lunch-note { font-size: 12.5px; color: var(--muted); white-space: normal; text-align: inherit; }
+.lunch-note b { color: var(--warn); }
+.dq-done .pill { white-space: normal; text-align: left; }
+/* never let a long line make the whole page slide sideways */
+.shell, .content { min-width: 0; max-width: 100vw; overflow-x: clip; }

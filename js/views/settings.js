@@ -263,6 +263,8 @@ const AUTH_ERR = [
   [/already registered|already been registered/i, "Bu email allaqachon ro'yxatdan o'tgan — «Kirish» ni tanlang"],
   [/at least \d+ char|weak password/i, "Parol kamida 6 ta belgidan iborat bo'lsin"],
   [/not confirmed/i, "Emailingizni tasdiqlang (xatni tekshiring)"],
+  [/signups? not allowed|signup_disabled/i, "Hozircha yangi akkaunt ochish yopiq. Ilova egasi ruxsat berishi kerak"],
+  [/not authorized|sending .*email|error sending/i, "Tasdiqlash xati yuborib bo'lmadi. Ilova egasiga xabar bering"],
   [/rate limit|too many/i, "Juda ko'p urinish. Birozdan keyin qayta urining"],
   [/valid email|invalid email/i, "Email noto'g'ri"],
   [/fetch|network|import/i, "Internetga ulanib bo'lmadi"],
