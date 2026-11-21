@@ -83,8 +83,8 @@ Ishlash tartibi: har bir foydalanuvchining ma'lumoti bitta JSON nusxa sifatida s
 ## Maslahatchi (Gemini) — sozlash
 
 1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) dan Gemini API kaliti oling.
-2. Supabase → Edge Functions → **Secrets** → nomi `GEMINI_API_KEY`, qiymati — kalit. (Kalit ilovada yoki repoda saqlanmaydi.)
-3. Ixtiyoriy: `GEMINI_MODEL` secret'i bilan model nomini qat'iy belgilash; bo'lmasa funksiya eng yangi barqaror «flash» modelni o'zi tanlaydi.
+2. Supabase → Edge Functions → **Secrets** → nomi `AZIMOV_GEMINI_API_KEY`, qiymati — kalit. Nom ataylab Azimov-ga xos: shu loyihadagi boshqa ilovalarning `GEMINI_API_KEY` secret'i bilan to'qnashmaydi. (Kalit ilovada yoki repoda saqlanmaydi.)
+3. Ixtiyoriy: `AZIMOV_GEMINI_MODEL` secret'i bilan model nomini qat'iy belgilash; bo'lmasa funksiya eng yangi barqaror «flash» modelni o'zi tanlaydi.
 4. Migratsiya `20261121000000_azimov_ai.sql` (kunlik limit jadvali) va `azimov-advisor` funksiyasi joylangan bo'lishi kerak. Funksiya faqat tizimga kirgan foydalanuvchini qabul qiladi.
 
 Maxfiylik: Google'ning bepul tarifida so'rovlar mahsulotni yaxshilash uchun ishlatilishi mumkin, pullik tarifda yo'q. Shu sababli ilova faqat umumlashtirilgan raqamlarni yuboradi (`js/advisor-context.js`).

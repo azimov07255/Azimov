@@ -1,5 +1,5 @@
 // Azimov AI advisor: a thin, guarded relay to Google Gemini.
-//  - the Gemini key lives ONLY in the function secret GEMINI_API_KEY (set in the Supabase dashboard, never in the app)
+//  - the Gemini key lives ONLY in the function secret AZIMOV_GEMINI_API_KEY (set in the Supabase dashboard, never in the app; the name is Azimov-specific so it can never collide with other apps' GEMINI_API_KEY)
 //  - requires a signed-in Azimov user (JWT) and enforces a daily per-user limit
 //  - the app sends a privacy-filtered summary (no names, notes, merchants); this function adds the instructions
 //  - POST { question, context, history }  ->  { answer, model, used, limit }
@@ -25,7 +25,7 @@ Foydalanuvchining qisqa moliyaviy xulosasi JSON ko'rinishida beriladi. Qoidalar:
 let modelCache: { at: number; name: string } | null = null;
 // Pick the newest stable "flash" model the key can use, so the function keeps working as Google retires old models.
 async function pickModel(key: string): Promise<string> {
-  const override = Deno.env.get('GEMINI_MODEL');
+  const override = Deno.env.get('AZIMOV_GEMINI_MODEL');
   if (override) return override;
   if (modelCache && Date.now() - modelCache.at < 6 * 3600e3) return modelCache.name;
   let name = 'gemini-2.5-flash';
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
   };
   if (dry) return json({ dry_run: true, payload, limit: LIMIT });
 
-  const key = Deno.env.get('GEMINI_API_KEY');
+  const key = Deno.env.get('AZIMOV_GEMINI_API_KEY');
   if (!key) return json({ error: 'not_configured' }, 503); // checked before counting, so an unconfigured server never burns the quota
 
   const hit = await admin.rpc('azimov_ai_hit', { p_user: uid, p_limit: LIMIT });
