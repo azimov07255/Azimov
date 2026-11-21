@@ -16,8 +16,12 @@ import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
 import { renderImport, afterImport, setImportText } from './views/import.js';
 import { renderRoundup, afterRoundup, renderWhatIf, afterWhatIf, renderPayoff, afterPayoff } from './views/savings.js';
+import { renderZakat, afterZakat } from './views/zakat.js';
 import { renderDaily } from './views/daily.js';
 import { renderReminders, afterReminders } from './views/reminders.js';
+import { initUpdate } from './update.js';
+import { initLock } from './lock.js';
+import { refreshRates } from './rates.js';
 import { initNotify, activeReminders } from './notify.js';
 import { renderScan, afterScan } from './views/scan.js';
 import { renderReports, afterReports } from './views/reports.js';
@@ -40,7 +44,7 @@ const NAV = [
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'zakat', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -58,6 +62,7 @@ const ROUTES = {
   roundup: { render: renderRoundup, after: (r) => afterRoundup(r) },
   whatif: { render: renderWhatIf, after: (r) => afterWhatIf(r) },
   payoff: { render: renderPayoff, after: (r) => afterPayoff(r) },
+  zakat: { render: renderZakat, after: (r) => afterZakat(r) },
   tools: { render: renderTools },
   settings: { render: renderSettings, after: (r) => afterSettings(r) },
   more: { render: renderMore },
@@ -242,7 +247,7 @@ window.addEventListener('hashchange', () => {
   closeSheet();
   render();
 });
-onChange(render);
+onChange((o) => !o?.quiet && render()); // commit({quiet:true}) = save + sync without re-rendering
 
 const SYNC_LABEL = { idle: 'Sinxronlangan', syncing: 'Sinxronlanmoqda…', offline: 'Oflayn', error: 'Sinxron xatosi', conflict: 'Farq bor' };
 function updateBell() {
@@ -278,8 +283,11 @@ onSyncChange(() => {
 
 consumeIncoming();
 render();
+initLock(); // after the first render so there is an #app to make inert
 initSync();
 initNotify();
+initUpdate();
+setTimeout(() => state.settings.onboarded && refreshRates(), 2500);
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname !== 'localhost-nosw') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

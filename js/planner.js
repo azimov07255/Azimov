@@ -94,3 +94,24 @@ export function simulatePayoff(debts, budget, strategy = 'snowball', maxMonths =
     order: order.map((d) => ({ id: d.id, name: d.name, left: d.left, rate: d.rate, paidMonth: d.paid })),
   };
 }
+
+// ---- zakat al-mal: 2.5% of net wealth that stays above the nisab for a (lunar) year ----
+// Nisab options (grams). Which one applies is a matter of madhab/scholar: the app only calculates.
+export const NISAB = {
+  silver_hanafi: { g: 612.36, metal: 'silver', name: 'Kumush — 612,36 g (hanafiy: 200 dirham)' },
+  gold_hanafi: { g: 87.48, metal: 'gold', name: 'Oltin — 87,48 g (hanafiy: 20 misqol)' },
+  silver_595: { g: 595, metal: 'silver', name: 'Kumush — 595 g' },
+  gold_85: { g: 85, metal: 'gold', name: 'Oltin — 85 g' },
+};
+export const LUNAR_YEAR_DAYS = 354;
+export function zakatCalc({ cash = 0, goldG = 0, silverG = 0, goldPrice = 0, silverPrice = 0, goods = 0, receivable = 0, debts = 0, basis = 'silver_hanafi' }) {
+  const goldValue = goldG * goldPrice;
+  const silverValue = silverG * silverPrice;
+  const assets = cash + goldValue + silverValue + goods + receivable;
+  const net = Math.max(0, assets - debts);
+  const n = NISAB[basis] || NISAB.silver_hanafi;
+  const price = n.metal === 'gold' ? goldPrice : silverPrice;
+  const nisab = price > 0 ? n.g * price : null;
+  const eligible = nisab !== null && net >= nisab;
+  return { assets, debts, net, goldValue, silverValue, nisab, nisabGrams: n.g, metal: n.metal, missingPrice: !(price > 0), eligible, zakat: eligible ? Math.round(net * 0.025 * 100) / 100 : 0 };
+}

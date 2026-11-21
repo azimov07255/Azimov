@@ -6,6 +6,9 @@ import { ACCOUNT_TYPES, COLORS, EMOJI } from '../data.js';
 import { actions, sheet, fText, fAmount, fSelect, fEmoji, fColor, fSeg, toast, confirmBox, amt, card } from '../ui.js';
 import { loadDemo } from './demo.js';
 import { disablePush } from '../push.js';
+import { autoRateOn, ratesInfo, refreshRates } from '../rates.js';
+import { lockEnabled, lockRecord, setPin, checkPin, removeLock, updateLock, lockNow, AUTO_OPTIONS, biometricAvailable, enrollBiometric, disableBiometric } from '../lock.js';
+import { APP_VERSION, APP_DATE, APP_HASH, updateState } from '../update.js';
 import { sync, signIn, signUp, signOut, resetPassword, syncNow } from '../sync.js';
 
 const STATUS = {
@@ -25,6 +28,19 @@ function cloudCard() {
     <div class="cloud-user"><span class="row-ico" style="--c:#22d3ee">👤</span><div><b>${esc(u.email || 'Akkaunt')}</b><small class="muted">${esc(sync.lastSync ? 'Oxirgi sinxron: ' + new Date(sync.lastSync).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : '')}</small></div></div>
     <div class="pill ${tone === 'ok' ? 'pos' : tone === 'bad' ? 'neg' : tone === 'warn' ? 'warn' : ''}" style="margin:10px 0">${label}${sync.status === 'error' && sync.error ? ': ' + esc(sync.error) : ''}</div>
     <div class="btn-col"><button class="btn ghost" data-act="cloud:sync">${icon('repeat', 16)} Hozir sinxronlash</button><button class="btn danger-ghost" data-act="cloud:logout">Chiqish</button></div>`, { cls: 'c6' });
+}
+
+function lockCard() {
+  const r = lockRecord();
+  if (!r?.hash)
+    return card(`${icon('shield', 18)} Qulf va xavfsizlik`, `<p class="muted small">Ilovani PIN kod yoki barmoq izi / Face ID bilan qulflang — telefoningizni boshqa kishi ochib qolsa ham pulingiz hisobini ko'ra olmaydi.</p><button class="btn primary" data-act="lock:enable">${icon('shield', 16)} PIN qulfni yoqish</button>`, { cls: 'c6' });
+  return card(`${icon('shield', 18)} Qulf va xavfsizlik`, `
+    <div class="rem-status"><span class="pill pos">🔒 Yoqilgan</span>${r.bio ? '<span class="pill pos">Barmoq izi / Face ID</span>' : ''}</div>
+    <label class="switch-row"><span><b>Barmoq izi / Face ID</b><small class="muted">PIN o'rniga tez ochish</small></span><input type="checkbox" data-lock="bio" ${r.bio ? 'checked' : ''}></label>
+    <label class="switch-row"><span><b>Ilovalar oynasida yashirish</b><small class="muted">Oxirgi ilovalar ro'yxatida summalar ko'rinmaydi</small></span><input type="checkbox" data-lock="shield" ${r.shield !== false ? 'checked' : ''}></label>
+    <label class="field inline"><span>Avto-qulf (ilovadan chiqqandan keyin)</span><select class="input sm" data-lock="auto">${AUTO_OPTIONS.map(([v, l]) => `<option value="${v}" ${(r.auto ?? 30) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <div class="btn-col" style="margin-top:12px"><button class="btn ghost" data-act="lock:now">${icon('shield', 16)} Hozir qulflash</button><button class="btn ghost" data-act="lock:change">PIN'ni o'zgartirish</button><button class="btn danger-ghost" data-act="lock:disable">Qulfni o'chirish</button></div>
+    <p class="muted small">Bu qulf ilovaga begonalar kirishini to'sadi. Telefonning o'z qulfini ham yoqib qo'ying.</p>`, { cls: 'c6' });
 }
 
 function catManager() {
@@ -50,11 +66,14 @@ export function renderSettings() {
       <label class="field"><span>Ismingiz</span><input class="input" id="setName" value="${esc(S.name)}" placeholder="Ism"></label>
       <div class="grid-2">
         <label class="field"><span>Valyuta</span><select class="input" id="setCur">${currencies.map((c) => `<option value="${c.code}" ${S.currency === c.code ? 'selected' : ''}>${c.code} — ${c.name}</option>`).join('')}</select></label>
-        <label class="field"><span>1 USD = so'm</span><input class="input" type="number" id="setRate" value="${S.usdRate}"></label>
+        <label class="field"><span>1 USD = so'm</span><input class="input" type="number" id="setRate" value="${S.usdRate}" ${autoRateOn() ? 'readonly' : ''}></label>
       </div>
+      <label class="switch-row"><span><b>Kursni Markaziy bankdan olish</b><small class="muted">${ratesInfo() ? `CBU · ${esc(ratesInfo().date)} · 1 USD = ${esc(String(ratesInfo().USD))} · EUR ${esc(String(ratesInfo().EUR || '—'))} · RUB ${esc(String(ratesInfo().RUB || '—'))}${ratesInfo().stale ? ' (eski)' : ''}` : "Hali olinmagan"}</small></span><input type="checkbox" id="setAuto" ${autoRateOn() ? 'checked' : ''}></label>
+      ${autoRateOn() ? `<button type="button" class="btn ghost sm" data-act="rates:refresh" style="margin-bottom:12px">${icon('repeat', 14)} Kursni hozir yangilash</button>` : ''}
       <div class="field"><span>Mavzu</span><div class="seg" id="setTheme">${[['dark', '🌙 Qorong\'i'], ['light', '☀️ Yorug\''], ['auto', '🖥️ Avto']].map(([v, l]) => `<label><input type="radio" name="theme" value="${v}" ${S.theme === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div></div>
       <label class="check"><input type="checkbox" id="setHide" ${S.hide ? 'checked' : ''}><span>Summalarni yashirish (maxfiylik rejimi)</span></label>`, { cls: 'c6' })}
     ${cloudCard()}
+    ${lockCard()}
     ${card('Hisoblar', `<div class="rows">${state.accounts.map((a) => `<button class="row" data-act="acct:edit" data-id="${a.id}"><span class="row-ico" style="--c:${a.color}">${a.icon}</span><span class="row-main"><b>${esc(a.name)}</b><small>${ACCOUNT_TYPES.find((t) => t[0] === a.type)?.[1] || ''}</small></span><span class="amount">${money(balanceOf(a.id))}</span></button>`).join('')}</div><button class="btn ghost" data-act="acct:new">${icon('plus', 16)} Hisob qo'shish</button>`, { cls: 'c6' })}
     ${card('Kategoriyalar', catManager(), { cls: 'c6' })}
     ${card("Ma'lumotlar", `
@@ -67,14 +86,46 @@ export function renderSettings() {
         <button class="btn danger-ghost" data-act="data:reset">${icon('trash', 16)} 0 dan boshlash (hammasini o'chirish)</button>
       </div>`, { cls: 'c6' })}
   </div>
-  <p class="muted center small foot">Azimov · Pul boshqaruvi · v1.0</p>`;
+  <section class="card ver">
+    <div class="split"><span><b>Azimov v${APP_VERSION}</b> <small class="muted">· ${esc(APP_DATE)} · ${APP_HASH.slice(0, 6)}</small></span>
+      ${updateState.available ? '<span class="pill warn">Yangi versiya bor</span>' : '<span class="pill pos">Yangi</span>'}</div>
+    <div class="btn-col" style="margin-top:12px">${updateState.available ? '<button class="btn primary" data-act="upd:apply">Hozir yangilash</button>' : ''}<button class="btn ghost" data-act="upd:check">Yangilanishni tekshirish</button><button class="btn ghost" data-act="upd:more">Nima yangi?</button></div>
+  </section>
+  <p class="muted center small foot">Azimov · Pul boshqaruvi</p>`;
 }
 
 export function afterSettings(root) {
+  root.addEventListener('change', async (e) => {
+    const k = e.target.dataset?.lock;
+    if (!k) return;
+    if (k === 'auto') updateLock({ auto: Number(e.target.value) });
+    else if (k === 'shield') updateLock({ shield: e.target.checked });
+    else if (k === 'bio') {
+      if (!e.target.checked) disableBiometric();
+      else if (!(await biometricAvailable())) {
+        e.target.checked = false;
+        return toast('Bu qurilmada barmoq izi / Face ID mavjud emas', { type: 'warn' });
+      } else {
+        try {
+          await enrollBiometric();
+          toast('Barmoq izi / Face ID yoqildi ✅', { type: 'ok' });
+        } catch {
+          e.target.checked = false;
+          toast('Yoqib bo\'lmadi yoki bekor qilindi', { type: 'warn' });
+        }
+      }
+    }
+    actions._render();
+  });
   root.querySelector('#setName')?.addEventListener('change', (e) => ((state.settings.name = e.target.value.trim()), commit()));
   root.querySelector('#setCur')?.addEventListener('change', (e) => ((state.settings.currency = e.target.value), commit()));
   root.querySelector('#setRate')?.addEventListener('change', (e) => ((state.settings.usdRate = Number(e.target.value) || 12700), commit()));
   root.querySelector('#setTheme')?.addEventListener('change', (e) => ((state.settings.theme = e.target.value), commit()));
+  root.querySelector('#setAuto')?.addEventListener('change', (e) => {
+    state.settings.autoRate = e.target.checked;
+    commit();
+    if (e.target.checked) refreshRates({ force: true });
+  });
   root.querySelector('#setHide')?.addEventListener('change', (e) => ((state.settings.hide = e.target.checked), commit()));
   root.querySelector('#importFile')?.addEventListener('change', async (e) => {
     const f = e.target.files[0];
@@ -271,4 +322,83 @@ actions['cloud:logout'] = async () => {
     await signOut();
     toast('Chiqdingiz', { type: 'ok' });
   }
+};
+
+/* ---------- app lock ---------- */
+const pinField = (label, name, len) => `<label class="field"><span>${label}</span><input class="input pin-in" type="password" inputmode="numeric" pattern="[0-9]*" name="${name}" maxlength="${len}" autocomplete="off" placeholder="${'•'.repeat(len)}"></label>`;
+const validPin = (p, len) => new RegExp(`^\\d{${len}}$`).test(p);
+
+actions['lock:enable'] = () =>
+  sheet({
+    title: 'PIN qulfni yoqish',
+    submit: 'Yoqish',
+    body: `<div class="field"><span>PIN uzunligi</span>${fSeg('len', [['4', '4 xona'], ['6', '6 xona']], '4')}</div>
+      <div id="pinFields">${pinField('Yangi PIN', 'pin1', 4)}${pinField('PIN ni takrorlang', 'pin2', 4)}</div>
+      <p class="muted small">PIN faqat shu qurilmada, shifrlangan (hash) ko'rinishda saqlanadi. Unutsangiz, tiklab bo'lmaydi — ma'lumotlar tozalanadi (bulutga ulangan bo'lsa, qayta kirib tiklaysiz).</p>`,
+    onMount(form) {
+      form.addEventListener('change', (e) => {
+        if (e.target.name !== 'len') return;
+        const n = Number(e.target.value);
+        form.querySelectorAll('.pin-in').forEach((i) => ((i.maxLength = n), (i.placeholder = '•'.repeat(n)), (i.value = '')));
+      });
+    },
+    async onSubmit(d) {
+      const len = Number(d.len);
+      if (!validPin(d.pin1, len)) return toast(`PIN ${len} ta raqamdan iborat bo'lsin`, { type: 'warn' }), false;
+      if (d.pin1 !== d.pin2) return toast('PIN lar mos kelmadi', { type: 'warn' }), false;
+      await setPin(d.pin1);
+      toast('PIN qulf yoqildi 🔒', { type: 'ok' });
+      if (await biometricAvailable()) {
+        const { confirmBox } = await import('../ui.js');
+        if (await confirmBox('Barmoq izi / Face ID ham yoqilsinmi? (PIN o\'rniga tez ochish uchun)', { ok: 'Yoqish', cancel: 'Keyinroq' })) {
+          try {
+            await enrollBiometric();
+            toast('Barmoq izi / Face ID yoqildi ✅', { type: 'ok' });
+          } catch {
+            toast('Yoqib bo\'lmadi — keyinroq sozlamalardan urinib ko\'ring', { type: 'warn' });
+          }
+        }
+      }
+      actions._render();
+    },
+  });
+
+actions['lock:change'] = () => {
+  const len = lockRecord()?.len || 4;
+  sheet({
+    title: "PIN'ni o'zgartirish",
+    submit: "O'zgartirish",
+    body: `${pinField('Joriy PIN', 'old', len)}${pinField('Yangi PIN', 'pin1', len)}${pinField('Yangi PIN ni takrorlang', 'pin2', len)}`,
+    async onSubmit(d) {
+      const r = await checkPin(d.old);
+      if (!r.ok) return toast(r.wait ? `Juda ko'p urinish. ${r.wait} soniyadan keyin urining` : "Joriy PIN noto'g'ri", { type: 'bad' }), false;
+      if (!validPin(d.pin1, len)) return toast(`PIN ${len} ta raqamdan iborat bo'lsin`, { type: 'warn' }), false;
+      if (d.pin1 !== d.pin2) return toast('Yangi PIN lar mos kelmadi', { type: 'warn' }), false;
+      await setPin(d.pin1);
+      toast("PIN o'zgartirildi ✅", { type: 'ok' });
+    },
+  });
+};
+
+actions['lock:disable'] = () => {
+  const len = lockRecord()?.len || 4;
+  sheet({
+    title: "Qulfni o'chirish",
+    submit: "O'chirish",
+    body: `<p class="muted small">Tasdiqlash uchun joriy PIN ni kiriting.</p>${pinField('PIN', 'old', len)}`,
+    async onSubmit(d) {
+      const r = await checkPin(d.old);
+      if (!r.ok) return toast(r.wait ? `Juda ko'p urinish. ${r.wait} soniyadan keyin urining` : "PIN noto'g'ri", { type: 'bad' }), false;
+      removeLock();
+      toast("Qulf o'chirildi", { type: 'ok' });
+      actions._render();
+    },
+  });
+};
+actions['lock:now'] = () => lockNow();
+
+actions['rates:refresh'] = async () => {
+  const r = await refreshRates({ force: true });
+  toast(r ? `Kurs yangilandi: 1 USD = ${r.USD} so'm (${r.date})` : "Kursni olib bo'lmadi (internet?)", { type: r ? 'ok' : 'warn' });
+  actions._render();
 };

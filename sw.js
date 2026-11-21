@@ -1,4 +1,4 @@
-const CACHE = 'azimov-v3';
+const CACHE = 'azimov-v4';
 const SHELL = ['./', './index.html', './css/styles.css', './manifest.webmanifest', './assets/icon.svg', './assets/logo.svg'];
 
 self.addEventListener('install', (e) => {
@@ -14,7 +14,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(req)
+    // 'no-cache' = always revalidate with the server, so a fresh deploy is never hidden by the HTTP cache
+    fetch(req, { cache: 'no-cache' })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));

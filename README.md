@@ -26,6 +26,10 @@ Pulni to'g'ri sarflash, tejash va kelajakdagi biznesga tayyorlanish uchun shaxsi
 | **Yaxlitlab tejash** | Har xarajatni yaxlitlab (23 400 → 25 000), farqi avtomatik maqsadga; tahrirlash/o'chirish va bank importida ham izchil; haqiqiy pulni jamg'arma hisobiga ko'chirish |
 | **Nima bo'ladi agar** | Kategoriya bo'yicha qisqartirish, daromad o'zgarishi, foyda va muddat → kelajak prognozi, maqsadga yetish vaqti, byudjetga qo'llash |
 | **Qarzni tez yopish** | Foiz va minimal to'lov bilan 3 usul (qor ko'chkisi / eng qimmat foiz / muddat) solishtiriladi: necha oy, qancha foiz, qaysi tartibda |
+| **PIN va barmoq izi qulfi** | PIN (PBKDF2 hash) + Face ID / barmoq izi (WebAuthn), 5 xatodan keyin o'suvchi kutish, avto-qulf, ilovalar oynasida summalarni yashirish. Eslatma: bu begonalarni ilovaga kiritmaydigan qulf, disk shifrlash emas |
+| **Markaziy bank kursi** | USD/EUR/RUB kursi cbu.uz dan avtomatik (Edge Function orqali), valyuta konvertori va bank xabarlaridagi chet el valyutasini o'giradi |
+| **Zakat va sadaqa** | Nisab o'lchovini (hanafiy/boshqa) tanlab 2,5% hisob-kitobi, yil (havl) sanasi, berilgan zakat/sadaqa daftari. Yordamchi vosita, fatvo emas |
+| **Yangi versiya xabari** | Yangi versiya joylansa, ochiq ilovada «Yangilash» paneli va «Nima yangi?» ro'yxati chiqadi |
 | **Sozlamalar** | Hisoblar, o'z kategoriyalaringiz, valyuta (UZS/USD/EUR/RUB), qorong'i/yorug' mavzu, summalarni yashirish, JSON zaxira va tiklash, CSV eksport |
 
 ## Ishga tushirish
@@ -74,6 +78,20 @@ Ishlash tartibi: har bir foydalanuvchining ma'lumoti bitta JSON nusxa sifatida s
 - `supabase/cron.sql.example` — pg_cron har 10 daqiqada funksiyani chaqiradi. O'chirish: `select cron.unschedule('azimov-notify');`
 - `js/reminders-core.js` va `supabase/functions/azimov-notify/core.js` **bir xil fayl** bo'lishi shart (qoidalar brauzerda ham, serverda ham bir xil). O'zgartirsangiz ikkalasini yangilang.
 - iPhone: faqat bosh ekranga qo'shilgan ilovada (iOS 16.4+). Foydalanuvchi akkauntga kirib, «Eslatmalar → Bildirishnomalarni yoqish» ni bosadi.
+
+## Yangi versiya chiqarish (muhim)
+
+Ilova ochiq turgan foydalanuvchiga yangilanishni ko'rsatishi uchun har joylashdan oldin:
+
+```bash
+# 1) CHANGELOG.json ning boshiga yangi yozuv qo'shing (versiya, sana, "Nima yangi" ro'yxati)
+# 2) belgini yangilang:
+node scripts/stamp-version.mjs
+# 3) commit qiling (version.json va js/version.js ham commit ichida bo'lsin)
+```
+
+`node scripts/stamp-version.mjs --check` belgi eskirganini aniqlaydi (CI yoki git `pre-commit` hook'ida ishlatish mumkin).
+Edge Functions: `azimov-notify` (eslatmalar), `azimov-rates` (Markaziy bank kursi, ochiq va faqat o'qish).
 
 ## Bank xabarlari haqida halol eslatma
 

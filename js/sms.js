@@ -161,9 +161,10 @@ export function parseOne(raw, opts = {}) {
   let value = amount;
   let note = '';
   if (currency !== base) {
-    if (currency === 'USD' && base === 'UZS' && opts.usdRate) {
-      value = Math.round(amount * opts.usdRate);
-      note = `${amount} USD`;
+    const rate = opts.rates?.[currency] || (currency === 'USD' ? opts.usdRate : 0);
+    if (base === 'UZS' && rate) {
+      value = Math.round(amount * rate);
+      note = `${amount} ${currency}`;
     } else note = `${amount} ${currency}`;
   }
   return { raw: orig, hash: hashOf(orig), type, amount: Math.round(value * 100) / 100, currency, foreign: note, merchant, last4, balance, date };

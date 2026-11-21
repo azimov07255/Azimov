@@ -4,6 +4,7 @@ import { money, curCode, parseAmt, amtText } from '../fmt.js';
 import { icon } from '../icons.js';
 import { parseMessages, guessCategory } from '../sms.js';
 import { actions, toast, card, empty } from '../ui.js';
+import { rateMap } from '../rates.js';
 import { lastAccountId } from './tx.js';
 
 let text = '';
@@ -21,7 +22,7 @@ function accountFor(last4) {
 const cashAccount = (exceptId) => state.accounts.find((a) => a.type === 'cash' && a.id !== exceptId)?.id || state.accounts.find((a) => a.id !== exceptId)?.id || '';
 
 export function analyze(t) {
-  const parsed = parseMessages(t, { currency: curCode(), usdRate: state.settings.usdRate });
+  const parsed = parseMessages(t, { currency: curCode(), usdRate: state.settings.usdRate, rates: rateMap() });
   const seen = new Set(state.imported || []);
   const tx = state.transactions;
   return parsed.map((p, i) => {

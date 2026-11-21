@@ -6,6 +6,7 @@ import { baseline, futureValue, emergencyMonths } from '../insights.js';
 import { area } from '../charts.js';
 import { actions, sheet, fAmount, fNumber, fSelect, fRange, progress, toast } from '../ui.js';
 import { totalBalance } from '../store.js';
+import { rateOf, ratesInfo, refreshRates } from '../rates.js';
 
 const TOOLS = [
   ['compound', '📈', 'Foiz va investitsiya', "Oylik jamg'arma va murakkab foiz kuchi"],
@@ -22,7 +23,7 @@ const TOOLS = [
 export function renderTools() {
   return `<div class="page-head"><div><h1>Asboblar</h1><p class="sub">Pul bo'yicha qaror qabul qilishga yordam beruvchi kalkulyatorlar</p></div></div>
   <h3 class="sec" style="margin-top:0">✨ Aqlli vositalar</h3>
-  <div class="tools smart"><a class="tool" href="#/roundup"><span class="tool-ico">🐖</span><b>Yaxlitlab tejash</b><small>Har xarajatni yaxlitlab, farqini maqsadga yig'adi</small></a><a class="tool" href="#/whatif"><span class="tool-ico">🔮</span><b>Nima bo'ladi agar...</b><small>Xarajat yoki daromad o'zgarsa, kelajak qanday bo'ladi</small></a><a class="tool" href="#/payoff"><span class="tool-ico">🏁</span><b>Qarzni tez yopish</b><small>Qaysi qarzni birinchi yopish, necha oyda tugaydi</small></a></div>
+  <div class="tools smart"><a class="tool" href="#/roundup"><span class="tool-ico">🐖</span><b>Yaxlitlab tejash</b><small>Har xarajatni yaxlitlab, farqini maqsadga yig'adi</small></a><a class="tool" href="#/whatif"><span class="tool-ico">🔮</span><b>Nima bo'ladi agar...</b><small>Xarajat yoki daromad o'zgarsa, kelajak qanday bo'ladi</small></a><a class="tool" href="#/zakat"><span class="tool-ico">🤲</span><b>Zakat va sadaqa</b><small>Nisab, 2,5% hisobi va berilganlar daftari</small></a><a class="tool" href="#/payoff"><span class="tool-ico">🏁</span><b>Qarzni tez yopish</b><small>Qaysi qarzni birinchi yopish, necha oyda tugaydi</small></a></div>
   <h3 class="sec">🧮 Kalkulyatorlar</h3>
   <div class="tools">${TOOLS.map(([id, ico, name, sub]) => `<button class="tool" data-act="tool:open" data-tool="${id}"><span class="tool-ico">${ico}</span><b>${name}</b><small>${sub}</small></button>`).join('')}</div>`;
 }
@@ -159,24 +160,32 @@ const TOOL_FNS = {
     );
   },
   currency() {
-    const rate = state.settings.usdRate || 12700;
+    const info = ratesInfo();
+    const CUR = ['USD', 'EUR', 'RUB', 'GBP', 'CNY'];
     calc(
       'Valyuta konvertori',
-      `${fNumber("1 USD = (so'm)", 'rate', { value: rate, step: 10 })}${fAmount("So'm", 'uzs', { value: 1000000 })}${fAmount('USD', 'usd', { value: 0 })}`,
-      (v, form) => {
+      `<div class="field"><span>Valyuta</span><div class="seg">${CUR.map((c, i) => `<label><input type="radio" name="cur" value="${c}" ${i === 0 ? 'checked' : ''}><span>${c}</span></label>`).join('')}</div></div>
+       ${fNumber("Kurs: 1 birlik = so'm", 'rate', { value: rateOf('USD'), step: 0.01 })}
+       ${fAmount("So'm", 'uzs', { value: 1000000 })}${fAmount('Chet el valyutasi', 'fx', { value: 100 })}`,
+      (v) => {
         const r = v.rate || 1;
-        const last = form._last;
-        let uzs = v.uzs;
-        let usd = v.usd;
-        return out([["So'm → USD", `$${num(v.uzs / r, 2)}`, 'big'], ['USD → so\'m', `${num(v.usd * r)} so'm`]], `<p class="muted small">Kurs bank yoki bozor kursiga qarab o'zgaradi. Ilova sozlamalaridagi kurs avtomatik saqlanadi.</p>`);
+        return out([[`So'm → ${v.cur}`, `${num(v.uzs / r, 2)} ${v.cur}`, 'big'], [`${num(v.fx, 2)} ${v.cur} → so'm`, `${num(v.fx * r)} so'm`]], `<p class="muted small">${info ? `Manba: Markaziy bank (CBU), ${esc(info.date)}.` : "Kurs qo'lda kiritilgan."} Bank va bozor kursi farq qilishi mumkin.</p>`);
       },
       {
-        onMount(form) {
+        onMount(form, run) {
+          const setRate = (c) => {
+            const r = rateOf(c);
+            if (r) form.rate.value = r;
+          };
           form.addEventListener('change', (e) => {
-            if (e.target.name === 'rate') {
-              state.settings.usdRate = parseAmt(e.target.value) || state.settings.usdRate;
-              commit();
+            if (e.target.name === 'cur') {
+              setRate(e.target.value);
+              run();
             }
+          });
+          refreshRates().then(() => {
+            setRate(form.cur.value || 'USD');
+            run();
           });
         },
       }

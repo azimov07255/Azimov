@@ -111,12 +111,12 @@ export function reconcileRoundups() {
   for (const id of Object.keys(ru.applied)) if (!goalIds.has(id)) delete ru.applied[id];
 }
 
-export function commit() {
+export function commit(opts) {
   reconcileRoundups();
   configure(state.settings.currency, state.settings.hide);
   clearTimeout(saveTimer);
   save();
-  listeners.forEach((fn) => fn());
+  listeners.forEach((fn) => fn(opts));
 }
 export function replaceState(next) {
   for (const k of Object.keys(state)) delete state[k];

@@ -12,3 +12,6 @@ export const TESS_LANGS = ['eng', 'rus'];
 
 // Web Push (reminders while the app is closed): the server generates the VAPID pair; the app fetches only the PUBLIC half.
 export const PUSH_FN_URL = SUPABASE_URL + '/functions/v1/azimov-notify';
+
+// Official Central Bank of Uzbekistan rates, relayed by an edge function (the bank's site does not allow direct browser requests).
+export const RATES_URL = SUPABASE_URL + '/functions/v1/azimov-rates';
