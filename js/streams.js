@@ -27,6 +27,8 @@ export function suggestAmount(st) {
 }
 
 const r2 = (n) => Math.round(n * 100) / 100;
+/** What is still owed for a day: the day's pay minus the lunch money already taken that day. */
+export const net = (e) => r2((e?.a || 0) - (e?.lunch || 0));
 const removeTx = (id) => (state.transactions = state.transactions.filter((t) => t.id !== id));
 
 /**
@@ -36,7 +38,8 @@ const removeTx = (id) => (state.transactions = state.transactions.filter((t) => 
 export function applyEntry(st, date, next) {
   const log = (state.dayLog[st.id] ||= {});
   const prev = log[date];
-  const before = prev?.s === 'paid' ? prev.a : 0;
+  const before = prev?.s === 'paid' ? net(prev) : 0; // a settled day only owns its "net" share of the pay-out transaction
+  if (prev?.ltx) removeTx(prev.ltx); // lunch money received that day is re-created below when it still applies
   if (before > 0 && prev.tx) {
     const tx = state.transactions.find((t) => t.id === prev.tx);
     if (tx) {
@@ -56,6 +59,17 @@ export function applyEntry(st, date, next) {
       state.transactions.push(tx);
       entry.tx = tx.id;
     }
+    // lunch money: taken on the day, so it is real income right away; only the rest of the day's pay stays owed
+    const lunch = next.s === 'earned' ? Math.min(r2(next.lunch || 0), entry.a) : 0;
+    if (lunch > 0) {
+      const ltx = {
+        id: uid(), ts: Date.now(), type: 'income', amount: lunch, date, note: `${st.name}: tushlik puli`,
+        accountId: next.accountId || st.accountId || state.accounts[0]?.id, categoryId: st.categoryId || 'i_salary', streamId: st.id, day: date,
+      };
+      state.transactions.push(ltx);
+      entry.lunch = lunch;
+      entry.ltx = ltx.id;
+    }
     log[date] = entry;
   }
   commit();
@@ -65,15 +79,20 @@ export const unpaidDates = (st) => {
   const log = state.dayLog?.[st.id] || {};
   return Object.keys(log).filter((d) => log[d].s === 'earned').sort();
 };
-export const unpaidSum = (st) => unpaidDates(st).reduce((a, d) => a + state.dayLog[st.id][d].a, 0);
+export const unpaidSum = (st) => unpaidDates(st).reduce((a, d) => a + net(state.dayLog[st.id][d]), 0);
 export const totalUnpaid = () => activeStreams().reduce((a, st) => a + unpaidSum(st), 0);
 
 /** One income transaction for several "earned" days (weekly pay-out). */
 export function settle(st, dates, { accountId, date = today() } = {}) {
   const log = state.dayLog[st.id] || {};
   const use = dates.filter((d) => log[d]?.s === 'earned');
-  const sum = r2(use.reduce((a, d) => a + log[d].a, 0));
-  if (!(sum > 0)) return 0;
+  const sum = r2(use.reduce((a, d) => a + net(log[d]), 0));
+  if (!use.length) return 0;
+  if (!(sum > 0)) {
+    use.forEach((d) => (log[d] = { ...log[d], s: 'paid' })); // the lunch money already covered those days completely
+    commit();
+    return 0;
+  }
   const tx = {
     id: uid(), ts: Date.now(), type: 'income', amount: sum, date, accountId: accountId || st.accountId || state.accounts[0]?.id,
     categoryId: st.categoryId || 'i_salary', note: `${st.name}: ${use.length} kunlik ish haqi`, streamId: st.id,
@@ -102,10 +121,11 @@ export function weekModel(st, ws) {
     days.push({ date, dow: dowOf(date), entry: e, status: dayStatus(st, date), scheduled: isScheduled(st, date), isToday: date === t });
   }
   const sumBy = (s) => days.reduce((a, d) => a + (d.entry?.s === s ? d.entry.a : 0), 0);
+  const lunchBy = days.reduce((a, d) => a + (d.entry?.s === 'earned' ? d.entry.lunch || 0 : 0), 0);
   return {
     days,
-    paid: sumBy('paid'),
-    earned: sumBy('earned'),
+    paid: sumBy('paid') + lunchBy, // lunch money already in hand counts as received
+    earned: days.reduce((a, d) => a + (d.entry?.s === 'earned' ? net(d.entry) : 0), 0),
     expected: days.filter((d) => !d.entry && d.scheduled && d.date >= t).reduce((a) => a + typical(st), 0),
     worked: days.filter((d) => d.entry && d.entry.s !== 'off').length,
     off: days.filter((d) => d.entry?.s === 'off').length,
@@ -135,7 +155,7 @@ export function monthTotals(key) {
     for (const [d, e] of Object.entries(log)) {
       if (d.slice(0, 7) !== key) continue;
       if (e.s === 'paid') (b.paid += e.a), b.days++;
-      else if (e.s === 'earned') (b.earned += e.a), b.days++;
+      else if (e.s === 'earned') (b.earned += net(e)), (b.paid += e.lunch || 0), b.days++;
       else b.off++;
     }
     out.paid += b.paid; out.earned += b.earned; out.days += b.days; out.off += b.off;

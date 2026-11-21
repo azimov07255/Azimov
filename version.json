@@ -1,12 +1,18 @@
 {
-  "hash": "cb740ad9a5c4",
-  "version": "1.7",
+  "hash": "51f2ef67bd5a",
+  "version": "1.8",
   "released": "2026-11-21",
   "notes": [
-    "AI endi pastki menyuda: Bosh, Yozuvlar, + (o'rtada), AI, Ko'proq. Byudjet «Ko'proq» bo'limida",
-    "Yangi keng, to'liq ekranli AI chat: salomlashish, tezkor savollar, nusxalash, qayta yozish, jadval va ro'yxatli javoblar"
+    "Kunlik daromadda «Tushlik puli»: ishlagan kuni tushlikka olgan pulingizni yozing, kunlik haqdan ayrilib, qolgani «olinmagan» bo'lib turadi"
   ],
   "history": [
+    {
+      "version": "1.8",
+      "date": "2026-11-21",
+      "notes": [
+        "Kunlik daromadda «Tushlik puli»: ishlagan kuni tushlikka olgan pulingizni yozing, kunlik haqdan ayrilib, qolgani «olinmagan» bo'lib turadi"
+      ]
+    },
     {
       "version": "1.7",
       "date": "2026-11-21",
@@ -48,15 +54,6 @@
       "notes": [
         "Kunlik daromad: dada/aka kabi manbalar, oldim / ishladim / dam, haftalik hisob-kitob",
         "Bosh sahifada «Bugun» vidjeti"
-      ]
-    },
-    {
-      "version": "1.2",
-      "date": "2026-11-20",
-      "notes": [
-        "Oylik reja va «Oyni yopish»",
-        "Chek skanerlash (qurilmada OCR)",
-        "Eslatmalar va Web Push"
       ]
     }
   ]

@@ -7,7 +7,7 @@ import { COLORS } from '../data.js';
 import { actions, sheet, fText, fAmount, fDate, fSelect, fEmoji, fColor, fSeg, card, empty, toast, amt, progress } from '../ui.js';
 import {
   DOW_SHORT, DOW_LONG, WEEK_ORDER, weekStart, dowOf, getEntry, activeStreams, streamById, typical, isScheduled, suggestAmount, applyEntry,
-  unpaidDates, unpaidSum, totalUnpaid, settle, weekModel, missedDays, monthTotals, incomeCats, dayStatus,
+  unpaidDates, unpaidSum, totalUnpaid, settle, net, weekModel, missedDays, monthTotals, incomeCats, dayStatus,
 } from '../streams.js';
 
 let viewWeek = null; // Monday (YYYY-MM-DD) of the week being looked at
@@ -29,6 +29,7 @@ const payText = (st) => (st.payMode === 'weekly' ? `haftalik jamlanadi (${DOW_LO
 function entryPill(e) {
   if (!e) return '';
   if (e.s === 'paid') return `<span class="pill pos">✅ Oldim ${money(e.a)}</span>`;
+  if (e.s === 'earned' && e.lunch) return `<span class="pill warn">🕒 Ishladim ${money(e.a)} · 🍽️ tushlik −${money(e.lunch)} · qoldi ${money(net(e))}</span>`;
   if (e.s === 'earned') return `<span class="pill warn">🕒 Ishladim ${money(e.a)} · olinmagan</span>`;
   return `<span class="pill">🚫 Dam${e.note ? ' · ' + esc(e.note) : ''}</span>`;
 }
@@ -54,7 +55,7 @@ function todayRow(st) {
 function tile(st, d) {
   const e = d.entry;
   const label = { paid: '✅', earned: '🕒', off: '🚫', missed: '❓', pending: '●', planned: '·', rest: '' }[d.status];
-  const val = e ? (e.s === 'off' ? 'dam' : tileAmt(e.a)) : d.status === 'planned' || d.status === 'pending' ? tileAmt(typical(st)) : '';
+  const val = e ? (e.s === 'off' ? 'dam' : tileAmt(e.s === 'earned' ? net(e) : e.a)) : d.status === 'planned' || d.status === 'pending' ? tileAmt(typical(st)) : '';
   return `<button class="dtile ${d.status} ${d.isToday ? 'today' : ''}" data-act="daily:day" data-sid="${st.id}" data-date="${d.date}" aria-label="${esc(dayLabel(d.date))}">
     <span class="dw">${DOW_SHORT[d.dow]}</span><span class="dn">${Number(d.date.slice(8))}</span><span class="di">${label}</span><b>${val}</b></button>`;
 }
@@ -148,7 +149,7 @@ actions['daily:quick'] = (el) => {
   const prev = getEntry(st.id, date);
   applyEntry(st, date, s === 'off' ? { s } : { s, a: typical(st) });
   const msg = s === 'paid' ? `✅ ${st.name}: ${money(typical(st), { force: true })} olindi` : s === 'earned' ? `🕒 ${st.name}: ishladi, hali olinmadi` : `🚫 ${st.name}: dam kuni`;
-  toast(msg, { type: 'ok', action: { label: 'Bekor qilish', fn: () => applyEntry(st, date, prev ? { s: prev.s, a: prev.a, note: prev.note } : null) } });
+  toast(msg, { type: 'ok', action: { label: 'Bekor qilish', fn: () => applyEntry(st, date, prev ? { s: prev.s, a: prev.a, lunch: prev.lunch, note: prev.note } : null) } });
 };
 
 actions['daily:day'] = (el) => {
@@ -168,8 +169,11 @@ function daySheet(st, date, preset) {
     title: `${st.icon} ${esc(st.name)}`,
     body: `<p class="muted small" style="margin-top:-4px">${esc(dayLabel(date))}${isScheduled(st, date) ? '' : ' · odatda dam olish kuni'}</p>
       ${fSeg('s', opts, opts.some((o) => o[0] === cur) ? cur : 'off')}
-      <div id="dmAmt">${fAmount('Summa', 'a', { value: start, big: true })}
+      <div id="dmAmt">${fAmount('Summa (kunlik ish haqi)', 'a', { value: start, big: true })}
         ${chips.length ? `<div class="quick-amts">${chips.map((c) => `<button type="button" class="hint" data-fill="${c}">${money(c, { force: true })}</button>`).join('')}</div>` : ''}
+        <div id="dmLunch" class="lunch-box">${fAmount('🍽️ Tushlik puli (shu kuni olganim)', 'lunch', { value: e?.lunch || 0 })}
+          <div class="lunch-amts">${[10000, 20000, 30000].map((c) => `<button type="button" class="hint" data-lunch="${c}">${money(c, { force: true })}</button>`).join('')}<button type="button" class="hint" data-lunch="0">Olmadim</button></div>
+          <div class="lunch-left" id="dmLeft"></div></div>
         <div id="dmAcc">${fSelect('Qaysi hisobga tushdi', 'accountId', accOpts, e?.tx ? state.transactions.find((t) => t.id === e.tx)?.accountId || st.accountId : st.accountId)}</div></div>
       ${fText('Izoh (ixtiyoriy)', 'note', { value: e?.note || '', placeholder: 'Masalan: kasal edim, bayram, qo\'shimcha ish' })}`,
     danger: e ? { label: 'Belgini olib tashlash', confirm: "Bu kun belgisi (va u yaratgan kirim) o'chiriladi.", fn: () => applyEntry(st, date, null) } : null,
@@ -177,12 +181,25 @@ function daySheet(st, date, preset) {
       const upd = () => {
         const s = form.s.value;
         form.querySelector('#dmAmt').hidden = s === 'off';
-        form.querySelector('#dmAcc').hidden = s !== 'paid';
+        form.querySelector('#dmAcc').hidden = s === 'off';
+        form.querySelector('#dmLunch').hidden = s !== 'earned';
+        left();
+      };
+      const left = () => {
+        const a = amt(form.a.value);
+        const l = Math.min(amt(form.lunch.value), a);
+        const box = form.querySelector('#dmLeft');
+        box.hidden = !(l > 0);
+        box.innerHTML = `Tushlikdan keyin qoladi: <b>${money(Math.max(0, a - l), { force: true })}</b> <small>(hali olinmagan)</small>`;
       };
       form.addEventListener('change', upd);
+      form.addEventListener('input', left);
       form.addEventListener('click', (ev) => {
         const b = ev.target.closest('[data-fill]');
         if (b) form.a.value = amtText(Number(b.dataset.fill));
+        const l = ev.target.closest('[data-lunch]');
+        if (l) form.lunch.value = Number(l.dataset.lunch) ? amtText(Number(l.dataset.lunch)) : '';
+        left();
       });
       upd();
     },
@@ -190,8 +207,9 @@ function daySheet(st, date, preset) {
       if (d.s === 'off') return applyEntry(st, date, { s: 'off', note: d.note.trim() }), toast('Dam kuni belgilandi', { type: 'ok' });
       const a = amt(d.a);
       if (!(a > 0)) return toast('Summani kiriting', { type: 'warn' }), false;
-      applyEntry(st, date, { s: d.s, a, note: d.note.trim(), accountId: d.accountId });
-      toast(d.s === 'paid' ? `✅ ${money(a, { force: true })} olindi` : '🕒 Ishladi deb belgilandi', { type: 'ok' });
+      const lunch = d.s === 'earned' ? Math.min(amt(d.lunch), a) : 0;
+      applyEntry(st, date, { s: d.s, a, lunch, note: d.note.trim(), accountId: d.accountId });
+      toast(d.s === 'paid' ? `✅ ${money(a, { force: true })} olindi` : lunch > 0 ? `🕒 Ishladi · tushlik ${money(lunch, { force: true })} olindi, ${money(a - lunch, { force: true })} qoldi` : '🕒 Ishladi deb belgilandi', { type: 'ok' });
     },
   });
 }
@@ -206,12 +224,12 @@ actions['daily:settle'] = (el) => {
     title: `💰 ${esc(st.name)}: hisob-kitob`,
     submit: 'Oldim — kirim yozilsin',
     body: `<p class="muted small">Olingan kunlarni belgilang. Hammasi bitta kirim sifatida yoziladi.</p>
-      <div class="settle-rows">${dates.map((d) => `<label class="settle-row"><input type="checkbox" name="d_${d}" checked><span>${esc(dayLabel(d))}</span><b>${money(log[d].a)}</b></label>`).join('')}</div>
+      <div class="settle-rows">${dates.map((d) => `<label class="settle-row"><input type="checkbox" name="d_${d}" checked><span>${esc(dayLabel(d))}${log[d].lunch ? `<small class="muted"> · ${money(log[d].a)} − tushlik ${money(log[d].lunch)}</small>` : ''}</span><b>${money(net(log[d]))}</b></label>`).join('')}</div>
       <div class="total-line"><span>Jami</span><b id="stTotal">—</b></div>
       <div class="grid-2">${fSelect('Hisob', 'accountId', state.accounts.map((a) => [a.id, `${a.icon} ${a.name}`]), st.accountId)}${fDate('Olingan sana', 'date', today())}</div>`,
     onMount(form) {
       const upd = () => {
-        const s = sum(dates.filter((d) => form['d_' + d]?.checked), (d) => log[d].a);
+        const s = sum(dates.filter((d) => form['d_' + d]?.checked), (d) => net(log[d]));
         form.querySelector('#stTotal').textContent = money(s, { force: true });
       };
       form.addEventListener('change', upd);

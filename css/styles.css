@@ -249,7 +249,7 @@ small { font-size: 12px; }
 .quick-in > .ico { color: var(--warn); }
 .quick-in .input { background: transparent; border: 0; padding: 8px 4px; box-shadow: none; flex: 1; min-width: 0; }
 .quick-in .input:focus { box-shadow: none; }
-.quick-hints, .quick-amts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.quick-hints, .quick-amts, .lunch-amts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .hint { font-size: 12.5px; padding: 6px 11px; border-radius: 99px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); transition: 0.2s; }
 .hint:hover { color: var(--text); border-color: var(--accent); }
 
@@ -995,3 +995,9 @@ body.kb-open .adv-dock { padding-bottom: calc(10px + env(safe-area-inset-bottom)
   .adv-orb i, .typing i, .adv-title .dot { animation: none; }
   .msg, .bub.reveal > * { animation: none; }
 }
+
+/* ---------- lunch money inside a worked day ---------- */
+.lunch-box { margin-top: 10px; padding: 12px; border-radius: 16px; background: color-mix(in srgb, var(--warn) 9%, transparent); border: 1px dashed color-mix(in srgb, var(--warn) 45%, transparent); }
+.lunch-left { margin-top: 10px; font-size: 14px; }
+.lunch-left[hidden] { display: none; }
+.lunch-left b { color: var(--warn); font-size: 16px; }

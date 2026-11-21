@@ -101,7 +101,7 @@ export function computeReminders(snap, now) {
       // weekly pay-out day: remind about everything worked but not yet received
       if (st.payMode === 'weekly' && dow(today) === (st.payDay ?? 6)) {
         const owed = Object.values(log).filter((e) => e.s === 'earned');
-        const total = owed.reduce((a, e) => a + e.a, 0);
+        const total = owed.reduce((a, e) => a + e.a - (e.lunch || 0), 0);
         if (total > 0) out.push({ id: `spay:${st.id}:${today}`, kind: 'stream', when: 'digest', level: 'warn', icon: '💰', href: '#/daily', order: -3, title: `${st.name}: haftalik pul olinadigan kun`, body: `${owed.length} kunlik ish haqi: ${M(total)} — oldingizmi?` });
       }
       // evening nudge when today (a working day) was never marked
