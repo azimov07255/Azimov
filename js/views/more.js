@@ -3,6 +3,7 @@ import { state } from '../store.js';
 import { esc } from '../utils.js';
 
 const ITEMS = [
+  ['budgets', 'Byudjet', 'pie', "Toifalar bo'yicha limitlar", '#22d3ee'],
   ['daily', 'Kunlik daromad', 'calendar', "Dada/akadan kunlik pul: oldim, ishladim, dam", '#a78bfa'],
   ['goals', 'Maqsadlar', 'target', "Orzularni raqamga aylantiring", '#34d399'],
   ['debts', 'Qarzlar', 'users', "Kim kimga qarzdor", '#fb7185'],

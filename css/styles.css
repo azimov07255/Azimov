@@ -133,7 +133,7 @@ small { font-size: 12px; }
 .bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding: 8px 10px env(safe-area-inset-bottom);
-  display: grid; grid-template-columns: 1fr 1fr 66px 1fr 1fr 1fr; align-items: center; gap: 0;
+  display: grid; grid-template-columns: 1fr 1fr 74px 1fr 1fr; align-items: center; gap: 0;
   background: color-mix(in srgb, var(--surface-solid) 82%, transparent); backdrop-filter: blur(26px);
   border-top: 1px solid var(--border);
 }
