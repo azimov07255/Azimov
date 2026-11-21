@@ -15,6 +15,7 @@ const ITEMS = [
   ['roundup', 'Yaxlitlab tejash', 'wallet', "Sezilmay yig'ish", '#fbbf24'],
   ['whatif', 'Nima bo\'ladi agar', 'sparkles', "Kelajak simulyatori", '#34d399'],
   ['payoff', 'Qarzni tez yopish', 'target', "Qarz rejasi", '#fb7185'],
+  ['advisor', 'Maslahatchi (AI)', 'sparkles', "Savol bering — Gemini javob beradi", '#a78bfa'],
   ['zakat', 'Zakat va sadaqa', 'heart', "Zakat hisobi va sadaqalar", '#34d399'],
   ['tools', 'Asboblar', 'sliders', "Kalkulyatorlar va challenge", '#fbbf24'],
   ['settings', 'Sozlamalar', 'gear', "Hisoblar, kategoriyalar, ma'lumot", '#94a3b8'],

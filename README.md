@@ -30,6 +30,7 @@ Pulni to'g'ri sarflash, tejash va kelajakdagi biznesga tayyorlanish uchun shaxsi
 | **Markaziy bank kursi** | USD/EUR/RUB kursi cbu.uz dan avtomatik (Edge Function orqali), valyuta konvertori va bank xabarlaridagi chet el valyutasini o'giradi |
 | **Zakat va sadaqa** | Nisab o'lchovini (hanafiy/boshqa) tanlab 2,5% hisob-kitobi, yil (havl) sanasi, berilgan zakat/sadaqa daftari. Yordamchi vosita, fatvo emas |
 | **Yangi versiya xabari** | Yangi versiya joylansa, ochiq ilovada «Yangilash» paneli va «Nima yangi?» ro'yxati chiqadi |
+| **Maslahatchi (AI, Gemini)** | «Nega bu oy ko'p sarfladim?» kabi savollarga ma'lumotlaringiz xulosasi asosida javob beradi. Faqat umumlashtirilgan raqamlar yuboriladi (ism, izoh, do'kon, hisob va qarzdor ismlari — yo'q), nima ketishini oldindan ko'rasiz; kuniga 30 savol limiti |
 | **Sozlamalar** | Hisoblar, o'z kategoriyalaringiz, valyuta (UZS/USD/EUR/RUB), qorong'i/yorug' mavzu, summalarni yashirish, JSON zaxira va tiklash, CSV eksport |
 
 ## Ishga tushirish
@@ -78,6 +79,15 @@ Ishlash tartibi: har bir foydalanuvchining ma'lumoti bitta JSON nusxa sifatida s
 - `supabase/cron.sql.example` — pg_cron har 10 daqiqada funksiyani chaqiradi. O'chirish: `select cron.unschedule('azimov-notify');`
 - `js/reminders-core.js` va `supabase/functions/azimov-notify/core.js` **bir xil fayl** bo'lishi shart (qoidalar brauzerda ham, serverda ham bir xil). O'zgartirsangiz ikkalasini yangilang.
 - iPhone: faqat bosh ekranga qo'shilgan ilovada (iOS 16.4+). Foydalanuvchi akkauntga kirib, «Eslatmalar → Bildirishnomalarni yoqish» ni bosadi.
+
+## Maslahatchi (Gemini) — sozlash
+
+1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) dan Gemini API kaliti oling.
+2. Supabase → Edge Functions → **Secrets** → nomi `GEMINI_API_KEY`, qiymati — kalit. (Kalit ilovada yoki repoda saqlanmaydi.)
+3. Ixtiyoriy: `GEMINI_MODEL` secret'i bilan model nomini qat'iy belgilash; bo'lmasa funksiya eng yangi barqaror «flash» modelni o'zi tanlaydi.
+4. Migratsiya `20261121000000_azimov_ai.sql` (kunlik limit jadvali) va `azimov-advisor` funksiyasi joylangan bo'lishi kerak. Funksiya faqat tizimga kirgan foydalanuvchini qabul qiladi.
+
+Maxfiylik: Google'ning bepul tarifida so'rovlar mahsulotni yaxshilash uchun ishlatilishi mumkin, pullik tarifda yo'q. Shu sababli ilova faqat umumlashtirilgan raqamlarni yuboradi (`js/advisor-context.js`).
 
 ## Yangi versiya chiqarish (muhim)
 

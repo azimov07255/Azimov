@@ -1,14 +1,20 @@
 {
-  "hash": "fac53585f56f",
-  "version": "1.5",
+  "hash": "fb9f1641621a",
+  "version": "1.6",
   "released": "2026-11-21",
   "notes": [
-    "Yangi versiya chiqsa, ilovaning o'zida xabar chiqadi — «Yangilash» tugmasi bilan",
-    "PIN va barmoq izi / Face ID qulfi",
-    "Dollar, yevro va rubl kursi Markaziy bankdan avtomatik",
-    "Zakat va sadaqa hisob-kitobi"
+    "Moliyaviy maslahatchi (Gemini): «Nega bu oy ko'p sarfladim?» kabi savollarga ma'lumotlaringiz asosida javob beradi",
+    "Maxfiylik: faqat umumlashtirilgan raqamlar yuboriladi, nima ketishini oldindan ko'rasiz"
   ],
   "history": [
+    {
+      "version": "1.6",
+      "date": "2026-11-21",
+      "notes": [
+        "Moliyaviy maslahatchi (Gemini): «Nega bu oy ko'p sarfladim?» kabi savollarga ma'lumotlaringiz asosida javob beradi",
+        "Maxfiylik: faqat umumlashtirilgan raqamlar yuboriladi, nima ketishini oldindan ko'rasiz"
+      ]
+    },
     {
       "version": "1.5",
       "date": "2026-11-21",

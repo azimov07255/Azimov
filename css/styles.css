@@ -816,3 +816,30 @@ body.shielded::after { content: ''; position: fixed; inset: 0; z-index: 480; bac
 .cr.big.neutral { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 .cr.big.neutral span { color: var(--muted); }
 .zk-hawl { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- AI advisor ---------- */
+.adv { display: flex; flex-direction: column; gap: 14px; }
+.adv-priv { margin-bottom: 0; }
+.adv-priv p { margin: 6px 0; }
+.adv-chat { margin-bottom: 0; display: flex; flex-direction: column; }
+.adv-msgs { min-height: 260px; max-height: 58vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 12px; scroll-behavior: smooth; }
+.msg { display: flex; gap: 8px; align-items: flex-end; max-width: 100%; }
+.msg.u { justify-content: flex-end; }
+.msg .bub { padding: 10px 14px; border-radius: 18px; max-width: 86%; font-size: 14.5px; line-height: 1.5; word-wrap: break-word; overflow-wrap: anywhere; }
+.msg.u .bub { background: var(--grad); color: #fff; border-bottom-right-radius: 6px; white-space: pre-wrap; }
+.msg.a .bub { background: var(--surface-2); border: 1px solid var(--border); border-bottom-left-radius: 6px; }
+.msg.err .bub { border-color: color-mix(in srgb, var(--warn) 55%, transparent); color: var(--warn); }
+.msg .av { font-size: 22px; flex: none; }
+.bub p { margin: 0 0 8px; } .bub p:last-child { margin-bottom: 0; }
+.bub ul, .bub ol { margin: 4px 0 8px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.typing { display: flex; gap: 5px; padding: 14px 16px !important; }
+.typing i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); animation: bounce 1s infinite; }
+.typing i:nth-child(2) { animation-delay: 0.15s; } .typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce { 0%, 60%, 100% { transform: none; opacity: 0.5; } 30% { transform: translateY(-5px); opacity: 1; } }
+.adv-empty { text-align: center; padding: 18px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.adv-ico { font-size: 44px; }
+.adv-sug { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
+.adv-form { display: flex; gap: 8px; align-items: flex-end; border-top: 1px solid var(--border); padding-top: 12px; }
+.adv-form textarea { resize: none; max-height: 120px; }
+.adv-form .btn { padding: 13px 16px; flex: none; }
+.adv-foot { margin-top: 8px; flex-wrap: wrap; }

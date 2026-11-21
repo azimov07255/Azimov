@@ -54,7 +54,7 @@ export function renderDashboard() {
     <form data-quick autocomplete="off">
       <div class="quick-in">${icon('zap', 18)}<input name="q" class="input" placeholder="Tez qo'shish: taksi 25 ming" enterkeyhint="send"><button class="btn primary sm" type="submit">${icon('send', 16)}</button></div>
     </form>
-    <div class="quick-hints">${EXAMPLES.map((e) => `<button type="button" class="hint" data-act="quick:fill" data-v="${esc(e)}">${esc(e)}</button>`).join('')}<a class="hint bank" href="#/import">🏦 Bank xabari</a><a class="hint bank" href="#/scan">🧾 Chek</a></div>
+    <div class="quick-hints">${EXAMPLES.map((e) => `<button type="button" class="hint" data-act="quick:fill" data-v="${esc(e)}">${esc(e)}</button>`).join('')}<a class="hint bank" href="#/import">🏦 Bank xabari</a><a class="hint bank" href="#/scan">🧾 Chek</a><a class="hint bank" href="#/advisor">🤖 Maslahatchi</a></div>
   </section>`;
 
   /* ---- overdue subs ---- */

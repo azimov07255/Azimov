@@ -16,6 +16,7 @@ import { renderMore } from './views/more.js';
 import { loadDemo } from './views/demo.js';
 import { renderImport, afterImport, setImportText } from './views/import.js';
 import { renderRoundup, afterRoundup, renderWhatIf, afterWhatIf, renderPayoff, afterPayoff } from './views/savings.js';
+import { renderAdvisor, afterAdvisor } from './views/advisor.js';
 import { renderZakat, afterZakat } from './views/zakat.js';
 import { renderDaily } from './views/daily.js';
 import { renderReminders, afterReminders } from './views/reminders.js';
@@ -44,7 +45,7 @@ const NAV = [
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'zakat', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'advisor', 'zakat', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -62,6 +63,7 @@ const ROUTES = {
   roundup: { render: renderRoundup, after: (r) => afterRoundup(r) },
   whatif: { render: renderWhatIf, after: (r) => afterWhatIf(r) },
   payoff: { render: renderPayoff, after: (r) => afterPayoff(r) },
+  advisor: { render: renderAdvisor, after: (r) => afterAdvisor(r) },
   zakat: { render: renderZakat, after: (r) => afterZakat(r) },
   tools: { render: renderTools },
   settings: { render: renderSettings, after: (r) => afterSettings(r) },
@@ -273,11 +275,18 @@ function updateSyncUI() {
   }
 }
 // a sheet that was open while sync state changed may have skipped a refresh: redo it once it is gone
-document.addEventListener('sheetclosed', () => shellBuilt && parseHash()[0] === 'settings' && render());
+const SYNC_VIEWS = ['settings', 'advisor', 'reminders']; // pages whose content depends on being signed in
+document.addEventListener('sheetclosed', () => shellBuilt && SYNC_VIEWS.includes(parseHash()[0]) && render());
+let lastUid = null;
 onSyncChange(() => {
   updateSyncUI();
-  // settings shows live status; the rest of the app re-renders through store changes
-  if (shellBuilt && parseHash()[0] === 'settings' && !document.querySelector('.sheet-root.open')) render();
+  // Settings shows live sync status, so it refreshes on every change. Advisor/Reminders only depend on WHO is signed in:
+  // refreshing them on every background sync tick would wipe the text being typed.
+  const uid = sync.user?.id || null;
+  const who = uid !== lastUid;
+  lastUid = uid;
+  const route = parseHash()[0];
+  if (shellBuilt && !document.querySelector('.sheet-root.open') && (route === 'settings' || (who && SYNC_VIEWS.includes(route)))) render();
   if (!state.settings.onboarded && sync.user && sync.status === 'idle') render();
 });
 
