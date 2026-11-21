@@ -34,6 +34,7 @@ const NAV = [
   ['transactions', 'Tranzaksiyalar', 'list'],
   ['daily', 'Kunlik daromad', 'calendar'],
   ['budgets', 'Byudjet', 'pie'],
+  ['advisor', 'Azimov AI', 'sparkles'],
   ['goals', 'Maqsadlar', 'target'],
   ['debts', 'Qarzlar', 'users'],
   ['subs', "Takroriy to'lovlar", 'repeat'],
@@ -45,7 +46,7 @@ const NAV = [
   ['tools', 'Asboblar', 'sliders'],
   ['settings', 'Sozlamalar', 'gear'],
 ];
-const MORE_ROUTES = ['more', 'advisor', 'zakat', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
+const MORE_ROUTES = ['more', 'zakat', 'roundup', 'whatif', 'payoff', 'daily', 'reminders', 'import', 'scan', 'reports', 'goals', 'debts', 'subs', 'business', 'tools', 'settings'];
 
 const ROUTES = {
   dashboard: { render: renderDashboard, after: (r) => bindQuick(r) },
@@ -102,9 +103,10 @@ function buildShell() {
     </div>
     <nav class="bottom-nav">
       <a href="#/dashboard" data-nav="dashboard">${icon('home', 22)}<span>Bosh</span></a>
-      <a href="#/transactions" data-nav="transactions">${icon('list', 22)}<span>Tranzaksiya</span></a>
+      <a href="#/transactions" data-nav="transactions">${icon('list', 22)}<span>Yozuvlar</span></a>
       <button class="fab" data-act="tx:new" aria-label="Qo'shish">${icon('plus', 26)}</button>
       <a href="#/budgets" data-nav="budgets">${icon('pie', 22)}<span>Byudjet</span></a>
+      <a href="#/advisor" data-nav="advisor" class="ai-tab">${icon('sparkles', 22)}<span>AI</span></a>
       <a href="#/more" data-nav="more">${icon('grid', 22)}<span>Ko'proq</span></a>
     </nav>
   </div>`;
@@ -173,6 +175,7 @@ export function render() {
     }
     throw e;
   }
+  document.body.classList.toggle('chat-route', !!view.querySelector('.adv-app'));
   try {
     route.after?.(view);
   } catch (e) {

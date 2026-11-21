@@ -1,12 +1,20 @@
 {
-  "hash": "fb9f1641621a",
-  "version": "1.6",
+  "hash": "6da2f7149c2e",
+  "version": "1.7",
   "released": "2026-11-21",
   "notes": [
-    "Moliyaviy maslahatchi (Gemini): «Nega bu oy ko'p sarfladim?» kabi savollarga ma'lumotlaringiz asosida javob beradi",
-    "Maxfiylik: faqat umumlashtirilgan raqamlar yuboriladi, nima ketishini oldindan ko'rasiz"
+    "AI endi pastki menyuda: Bosh, Yozuvlar, +, Byudjet, AI, Ko'proq",
+    "Yangi keng, to'liq ekranli AI chat: salomlashish, tezkor savollar, nusxalash, qayta yozish, jadval va ro'yxatli javoblar"
   ],
   "history": [
+    {
+      "version": "1.7",
+      "date": "2026-11-21",
+      "notes": [
+        "AI endi pastki menyuda: Bosh, Yozuvlar, +, Byudjet, AI, Ko'proq",
+        "Yangi keng, to'liq ekranli AI chat: salomlashish, tezkor savollar, nusxalash, qayta yozish, jadval va ro'yxatli javoblar"
+      ]
+    },
     {
       "version": "1.6",
       "date": "2026-11-21",
@@ -49,13 +57,6 @@
         "Oylik reja va «Oyni yopish»",
         "Chek skanerlash (qurilmada OCR)",
         "Eslatmalar va Web Push"
-      ]
-    },
-    {
-      "version": "1.0",
-      "date": "2026-11-19",
-      "notes": [
-        "Birinchi versiya: byudjet, maqsadlar, qarzlar, biznes, hisobotlar, bulut sinxronizatsiyasi"
       ]
     }
   ]
